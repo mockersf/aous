@@ -95,8 +95,6 @@ fn refresh_visible_lots(
                 Vec3::new(position.x as f32, 0.0, position.y as f32),
             ) {
                 if is_on_screen(screen_position) {
-                    let position =
-                        IVec2::new(gt.translation.x as i32 + i, gt.translation.z as i32 + j);
                     if let Entry::Vacant(vacant) = updated_lots.entry(position) {
                         debug!("spawning {:?}", position);
                         vacant.insert(

@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use bevy::{
     ecs::component::SparseStorage,
     math::const_vec3,
-    prelude::{shape::Plane, *},
+    prelude::*,
     render::{
         mesh::Indices,
         pipeline::PrimitiveTopology,
@@ -35,26 +35,7 @@ pub struct TerrainSpawnerPlugin;
 
 impl Plugin for TerrainSpawnerPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<WaterHandles>()
-            .add_system(fill_empty_lots);
-    }
-}
-
-struct WaterHandles {
-    plane: Handle<Mesh>,
-    color: Handle<StandardMaterial>,
-}
-
-impl FromWorld for WaterHandles {
-    fn from_world(world: &mut World) -> Self {
-        let mut meshes = world.get_resource_mut::<Assets<Mesh>>().unwrap();
-        let plane = meshes.add(Plane::default().into());
-        let mut materials = world
-            .get_resource_mut::<Assets<StandardMaterial>>()
-            .unwrap();
-        let color = materials.add((*Color::AQUAMARINE.clone().set_a(0.8)).into());
-
-        Self { plane, color }
+        app.add_system(fill_empty_lots);
     }
 }
 
@@ -72,7 +53,6 @@ struct HandledLot {
 fn fill_empty_lots(
     mut commands: Commands,
     lots: Query<(Entity, &EmptyLot)>,
-    water: Res<WaterHandles>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut textures: ResMut<Assets<Texture>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
@@ -82,16 +62,6 @@ fn fill_empty_lots(
         commands
             .entity(entity)
             .with_children(|lot| {
-                lot.spawn_bundle(PbrBundle {
-                    mesh: water.plane.clone(),
-                    material: water.color.clone(),
-                    visible: Visible {
-                        is_visible: true,
-                        is_transparent: true,
-                    },
-                    transform: Transform::from_xyz(0.0, -0.05, 0.0),
-                    ..Default::default()
-                });
                 let mesh = mesh_cache
                     .entry(IVec2::new(position.x, position.z))
                     .or_insert_with(|| {
@@ -160,7 +130,7 @@ fn generate_lot(x: i32, z: i32) -> Lot {
     let mut colors = Vec::new();
     let mut metallic_roughness = Vec::new();
 
-    let color_def = 50.0;
+    let color_def = 100.0;
     let def = 20.0;
 
     for i in 0..=(def as i32) {
@@ -168,14 +138,7 @@ fn generate_lot(x: i32, z: i32) -> Lot {
             let nx = x as f32 + i as f32 / def;
             let nz = z as f32 + j as f32 / def;
             let elevation = elevation_noise.get_noise(nx, nz);
-            let elevation_mod = elevation / 25.0
-                + if elevation > 0.25 {
-                    0.2
-                } else if elevation < -0.25 {
-                    -0.2
-                } else {
-                    0.0
-                };
+            let elevation_mod = elevation / 25.0 + if elevation > 0.25 { 0.25 } else { 0.0 };
             vertices.push((
                 [i as f32 / def - 0.5, elevation_mod, j as f32 / def - 0.5],
                 [j as f32 / def, i as f32 / def],
