@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{hash_map::Entry, HashMap};
 
 use bevy::{
     ecs::component::SparseStorage,
@@ -130,26 +130,62 @@ fn generate_lot(x: i32, z: i32) -> Lot {
     let mut colors = Vec::new();
     let mut metallic_roughness = Vec::new();
 
-    let color_def = 100.0;
-    let def = 20.0;
+    let def = 15.0;
 
     for i in 0..=(def as i32) {
         for j in 0..=(def as i32) {
             let nx = x as f32 + i as f32 / def;
             let nz = z as f32 + j as f32 / def;
-            let elevation = elevation_noise.get_noise(nx, nz);
-            let elevation_mod = elevation / 25.0 + if elevation > 0.25 { 0.25 } else { 0.0 };
+            let get_elevation = |x, z, dx, dz| {
+                let elevation = elevation_noise.get_noise(x + dx, z + dz);
+                (
+                    elevation,
+                    elevation / 25.0 + if elevation > 0.25 { 0.4 } else { 0.0 },
+                )
+            };
+
+            let (elevation, elevation_mod) =
+                get_elevation(x as f32, z as f32, i as f32 / def, j as f32 / def);
+
+            let mut neighbours = Vec::new();
+            for di in -1..=1 {
+                for dj in -1..=1 {
+                    if di != 0 || dj != 0 {
+                        let de = get_elevation(nx, nz, di as f32 / def, dj as f32 / def).1;
+                        neighbours.push([di as f32 / def, de, dj as f32 / def]);
+                    }
+                }
+            }
+            let mut normal = Vec3::ZERO;
+            for (b, c) in [
+                (0, 1),
+                (1, 2),
+                (2, 4),
+                (4, 7),
+                (7, 6),
+                (6, 5),
+                (5, 3),
+                (3, 0),
+            ] {
+                let pa = Vec3::from([0.0, elevation_mod, 0.0]);
+                let pb = Vec3::from(neighbours[b]);
+                let pc = Vec3::from(neighbours[c]);
+
+                let ab = pb - pa;
+                let bc = pc - pb;
+                let ca = pa - pc;
+                let normal_face = ab.cross(bc) + bc.cross(ca) + ca.cross(ab);
+
+                normal += normal_face;
+            }
+            let normal = normal.normalize();
+
             vertices.push((
                 [i as f32 / def - 0.5, elevation_mod, j as f32 / def - 0.5],
+                [normal.x, normal.y, normal.z],
                 [j as f32 / def, i as f32 / def],
             ));
-        }
-    }
-    for i in 0..=(color_def as i32) {
-        for j in 0..=(color_def as i32) {
-            let nx = x as f32 + i as f32 / color_def;
-            let nz = z as f32 + j as f32 / color_def;
-            let elevation = elevation_noise.get_noise(nx, nz);
+
             let moisture = moisture_noise.get_noise(nx, nz);
 
             let elevation = elevation + 0.5;
@@ -175,79 +211,65 @@ fn generate_lot(x: i32, z: i32) -> Lot {
             ]);
         }
     }
+
     Lot {
         mesh: vertices_as_mesh(vertices, def as u32),
         color: Texture::new(
-            Extent3d::new(color_def as u32 + 1, color_def as u32 + 1, 1),
+            Extent3d::new(def as u32 + 1, def as u32 + 1, 1),
             TextureDimension::D2,
             colors,
             TextureFormat::Rgba8UnormSrgb,
         ),
         metallic_roughness: Texture::new(
-            Extent3d::new(color_def as u32 + 1, color_def as u32 + 1, 1),
+            Extent3d::new(def as u32 + 1, def as u32 + 1, 1),
             TextureDimension::D2,
             metallic_roughness,
             TextureFormat::Rgba8UnormSrgb,
         ),
     }
 }
+type Node = ([f32; 3], [f32; 3], [f32; 2]);
 
-fn vertices_as_mesh(vertices: Vec<([f32; 3], [f32; 2])>, details: u32) -> Mesh {
+fn vertices_as_mesh(vertices: Vec<Node>, details: u32) -> Mesh {
     let mut positions = Vec::new();
     let mut normals = Vec::new();
     let mut uvs = Vec::new();
-    for (position, uv) in vertices.iter() {
-        positions.push(*position);
-        normals.push([0.0, 0.0, 0.0]);
-        uvs.push(*uv);
-    }
+    let mut indices = Vec::new();
 
-    let mut indices = vec![];
-    for i in 0..details {
-        for j in 0..details {
-            indices.extend_from_slice(&[
-                i + (details + 1) * j,
-                i + 1 + (details + 1) * j,
-                i + (details + 1) * (j + 1),
-            ]);
-            indices.extend_from_slice(&[
-                i + (details + 1) * (j + 1),
-                i + 1 + (details + 1) * j,
-                i + 1 + (details + 1) * (j + 1),
-            ]);
+    {
+        let mut n = 0;
+        let mut pushed = HashMap::new();
+
+        let mut push = |data: Node| match pushed.entry(IVec2::new(
+            (data.0[0] * details as f32 * 2.0) as i32,
+            (data.0[2] * details as f32 * 2.0) as i32,
+        )) {
+            Entry::Occupied(o) => *o.get(),
+            Entry::Vacant(v) => {
+                positions.push(data.0);
+                normals.push(data.1);
+                uvs.push(data.2);
+                n += 1;
+                *v.insert(n - 1)
+            }
+        };
+
+        for i in 0..details {
+            for j in 0..details {
+                let data1 = *vertices.get((i + j * (details + 1)) as usize).unwrap();
+                let data2 = *vertices.get((i + 1 + j * (details + 1)) as usize).unwrap();
+                let data3 = *vertices
+                    .get((i + (j + 1) * (details + 1)) as usize)
+                    .unwrap();
+                let data4 = *vertices
+                    .get((i + 1 + (j + 1) * (details + 1)) as usize)
+                    .unwrap();
+
+                indices.extend_from_slice(&[push(data1), push(data2), push(data3)]);
+                indices.extend_from_slice(&[push(data3), push(data2), push(data4)]);
+            }
         }
     }
-
-    let mut indices_iter = indices.iter();
-    while let Some(a) = indices_iter.next() {
-        let b = indices_iter.next().unwrap();
-        let c = indices_iter.next().unwrap();
-
-        let pa = Vec3::from(positions[*a as usize]);
-        let pb = Vec3::from(positions[*b as usize]);
-        let pc = Vec3::from(positions[*c as usize]);
-
-        let ab = pb - pa;
-        let bc = pc - pb;
-        let ca = pa - pc;
-        let normal_face = ab.cross(bc) + bc.cross(ca) + ca.cross(ab);
-
-        let na = Vec3::from(normals[*a as usize]);
-        let nb = Vec3::from(normals[*b as usize]);
-        let nc = Vec3::from(normals[*c as usize]);
-        (na + normal_face).write_to_slice(&mut normals[*a as usize]);
-        (nb + normal_face).write_to_slice(&mut normals[*b as usize]);
-        (nc + normal_face).write_to_slice(&mut normals[*c as usize]);
-    }
-
-    let normals: Vec<_> = normals
-        .into_iter()
-        .map(|normal| {
-            let normal = Vec3::from(normal);
-            let normalized = normal.normalize();
-            [normalized.x, normalized.y, normalized.z]
-        })
-        .collect();
 
     let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
     mesh.set_attribute(Mesh::ATTRIBUTE_POSITION, positions);
