@@ -107,9 +107,9 @@ dependencies = [
 
 [[package]]
 name = "anyhow"
-version = "1.0.44"
+version = "1.0.45"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "61604a8f862e1d5c3229fdd78f8b02c68dcf73a4c4b05fd636d12240aaa242c1"
+checksum = "ee10e43ae4a853c0a3591d4e2ada1719e553be18199d9da9d4a83f5927c2f5c7"
 
 [[package]]
 name = "aous"
@@ -434,7 +434,7 @@ version = "0.5.0"
 source = "git+https://github.com/bevyengine/bevy#91c3b210a2b911039a588d6c2828c43cba21536e"
 dependencies = [
  "bevy_reflect",
- "glam 0.18.0",
+ "glam",
 ]
 
 [[package]]
@@ -462,7 +462,7 @@ dependencies = [
  "bevy_utils",
  "downcast-rs",
  "erased-serde",
- "glam 0.18.0",
+ "glam",
  "parking_lot",
  "serde",
  "smallvec",
@@ -892,7 +892,7 @@ dependencies = [
  "block",
  "cocoa-foundation",
  "core-foundation 0.9.2",
- "core-graphics 0.22.2",
+ "core-graphics 0.22.3",
  "foreign-types",
  "libc",
  "objc",
@@ -1026,9 +1026,9 @@ dependencies = [
 
 [[package]]
 name = "core-graphics"
-version = "0.22.2"
+version = "0.22.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "269f35f69b542b80e736a20a89a05215c0ce80c2c03c514abb2e318b78379d86"
+checksum = "2581bbab3b8ffc6fcbd550bf46c355135d16e9ff2a6ea032ad6b9bf1d7efe4fb"
 dependencies = [
  "bitflags",
  "core-foundation 0.9.2",
@@ -1638,12 +1638,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "glam"
-version = "0.20.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c2c626156a479bfb5a4362c43f5abadd700af33ebc8db068089d9cb92493d6ab"
-
-[[package]]
 name = "glob"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1788,11 +1782,11 @@ checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 
 [[package]]
 name = "hexasphere"
-version = "5.0.1"
+version = "5.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "638b7196f9e22aa087783cb28eef648d8abeaa735868caf1b0e7e4a943ad877d"
+checksum = "569262de9149ffd26673422a5ea27240eca79ebe0144ed9e42f265f45ed9ecc2"
 dependencies = [
- "glam 0.20.0",
+ "glam",
  "lazy_static",
 ]
 
@@ -1836,9 +1830,9 @@ checksum = "a257582fdcde896fd96463bf2d40eefea0580021c0712a0e2b028b60b47a837a"
 
 [[package]]
 name = "inotify"
-version = "0.9.5"
+version = "0.9.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9e5fc8f41dbaa9c8492a96c8afffda4f76896ee041d6a57606e70581b80c901f"
+checksum = "f8069d3ec154eb856955c1c0fbffefbf5f3c40a104ec912d4797314c1801abff"
 dependencies = [
  "bitflags",
  "inotify-sys",
@@ -3378,7 +3372,7 @@ dependencies = [
  "bitflags",
  "cocoa",
  "core-foundation 0.9.2",
- "core-graphics 0.22.2",
+ "core-graphics 0.22.3",
  "core-video-sys",
  "dispatch",
  "instant",
