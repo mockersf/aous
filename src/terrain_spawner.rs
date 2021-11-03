@@ -236,38 +236,36 @@ fn vertices_as_mesh(vertices: Vec<Node>, details: u32) -> Mesh {
     let mut uvs = Vec::new();
     let mut indices = Vec::new();
 
-    {
-        let mut n = 0;
-        let mut pushed = HashMap::new();
+    let mut n = 0;
+    let mut pushed = HashMap::new();
 
-        let mut push = |data: Node| match pushed.entry(IVec2::new(
-            (data.0[0] * details as f32 * 2.0) as i32,
-            (data.0[2] * details as f32 * 2.0) as i32,
-        )) {
-            Entry::Occupied(o) => *o.get(),
-            Entry::Vacant(v) => {
-                positions.push(data.0);
-                normals.push(data.1);
-                uvs.push(data.2);
-                n += 1;
-                *v.insert(n - 1)
-            }
-        };
+    let mut push = |data: Node| match pushed.entry(IVec2::new(
+        (data.0[0] * details as f32 * 2.0) as i32,
+        (data.0[2] * details as f32 * 2.0) as i32,
+    )) {
+        Entry::Occupied(o) => *o.get(),
+        Entry::Vacant(v) => {
+            positions.push(data.0);
+            normals.push(data.1);
+            uvs.push(data.2);
+            n += 1;
+            *v.insert(n - 1)
+        }
+    };
 
-        for i in 0..details {
-            for j in 0..details {
-                let data1 = *vertices.get((i + j * (details + 1)) as usize).unwrap();
-                let data2 = *vertices.get((i + 1 + j * (details + 1)) as usize).unwrap();
-                let data3 = *vertices
-                    .get((i + (j + 1) * (details + 1)) as usize)
-                    .unwrap();
-                let data4 = *vertices
-                    .get((i + 1 + (j + 1) * (details + 1)) as usize)
-                    .unwrap();
+    for i in 0..details {
+        for j in 0..details {
+            let data1 = *vertices.get((i + j * (details + 1)) as usize).unwrap();
+            let data2 = *vertices.get((i + 1 + j * (details + 1)) as usize).unwrap();
+            let data3 = *vertices
+                .get((i + (j + 1) * (details + 1)) as usize)
+                .unwrap();
+            let data4 = *vertices
+                .get((i + 1 + (j + 1) * (details + 1)) as usize)
+                .unwrap();
 
-                indices.extend_from_slice(&[push(data1), push(data2), push(data3)]);
-                indices.extend_from_slice(&[push(data3), push(data2), push(data4)]);
-            }
+            indices.extend_from_slice(&[push(data1), push(data2), push(data3)]);
+            indices.extend_from_slice(&[push(data3), push(data2), push(data4)]);
         }
     }
 
