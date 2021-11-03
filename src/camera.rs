@@ -1,6 +1,7 @@
 use std::collections::hash_map::Entry;
 
 use bevy::{prelude::*, render::camera::Camera, utils::HashMap};
+use bevy_mod_raycast::RayCastSource;
 
 use crate::terrain_spawner::EmptyLot;
 
@@ -26,10 +27,12 @@ fn setup(mut commands: Commands) {
             CameraParent,
         ))
         .with_children(|camera_placer| {
-            camera_placer.spawn_bundle(PerspectiveCameraBundle {
-                transform: Transform::from_xyz(0.0, 3.0, -0.2).looking_at(Vec3::ZERO, Vec3::Y),
-                ..Default::default()
-            });
+            camera_placer
+                .spawn_bundle(PerspectiveCameraBundle {
+                    transform: Transform::from_xyz(0.0, 3.0, -0.2).looking_at(Vec3::ZERO, Vec3::Y),
+                    ..Default::default()
+                })
+                .insert(RayCastSource::<crate::RaycastCameraToGround>::new_transform_empty());
             camera_placer
                 .spawn_bundle(PointLightBundle {
                     transform: Transform::from_xyz(-10.0, 8.0, 0.0),

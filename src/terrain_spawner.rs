@@ -10,6 +10,7 @@ use bevy::{
         texture::{Extent3d, TextureDimension, TextureFormat},
     },
 };
+use bevy_mod_raycast::{BoundVol, RayCastMesh};
 use bracket_noise::prelude::{FastNoise, FractalType, NoiseType};
 
 #[derive(Debug)]
@@ -84,7 +85,11 @@ fn fill_empty_lots(
                     mesh: mesh.mesh.clone_weak(),
                     material: mesh.color.clone_weak(),
                     ..Default::default()
-                });
+                })
+                .insert_bundle((
+                    BoundVol { sphere: None },
+                    RayCastMesh::<crate::RaycastCameraToGround>::default(),
+                ));
             })
             .remove::<EmptyLot>();
     }
