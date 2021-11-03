@@ -29,15 +29,8 @@ jobs:
         with:
           command: test
 
-      - uses: actions/cache@v2
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-
   clippy_check:
+    name: Clippy
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
@@ -46,11 +39,14 @@ jobs:
             toolchain: stable
             components: clippy
             override: true
+      - name: Install Dependencies
+        run: sudo apt-get update; sudo apt-get install pkg-config libx11-dev libasound2-dev libudev-dev
       - uses: actions-rs/clippy-check@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
   format:
+    name: Format
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
