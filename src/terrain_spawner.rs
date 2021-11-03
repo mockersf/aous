@@ -178,7 +178,6 @@ fn generate_lot(x: i32, z: i32) -> Lot {
                 };
             vertices.push((
                 [i as f32 / def - 0.5, elevation_mod, j as f32 / def - 0.5],
-                [0.0, 0.0, 0.0],
                 [j as f32 / def, i as f32 / def],
             ));
         }
@@ -230,13 +229,13 @@ fn generate_lot(x: i32, z: i32) -> Lot {
     }
 }
 
-fn vertices_as_mesh(vertices: Vec<([f32; 3], [f32; 3], [f32; 2])>, details: u32) -> Mesh {
+fn vertices_as_mesh(vertices: Vec<([f32; 3], [f32; 2])>, details: u32) -> Mesh {
     let mut positions = Vec::new();
     let mut normals = Vec::new();
     let mut uvs = Vec::new();
-    for (position, normal, uv) in vertices.iter() {
+    for (position, uv) in vertices.iter() {
         positions.push(*position);
-        normals.push(*normal);
+        normals.push([0.0, 0.0, 0.0]);
         uvs.push(*uv);
     }
 
