@@ -67,6 +67,7 @@ jobs:
         uses: actions-rs/clippy-check@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          args: -- -D warnings
 
   format:
     name: Format
@@ -78,7 +79,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
             toolchain: stable
-            components: clippy
+            components: rustfmt
             override: true
       - name: Run cargo fmt
         uses: actions-rs/cargo@v1
