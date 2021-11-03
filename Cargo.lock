@@ -118,6 +118,7 @@ dependencies = [
  "bevy",
  "bevy_mod_raycast",
  "bracket-noise",
+ "rand",
 ]
 
 [[package]]

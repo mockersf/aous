@@ -1,8 +1,7 @@
-use std::f32::consts::FRAC_PI_2;
+use std::f32::consts::{FRAC_PI_2, PI};
 
 use bevy::prelude::*;
-
-use crate::CursorPosition;
+use rand::Rng;
 
 pub struct AntsPlugin;
 
@@ -57,6 +56,7 @@ impl FromWorld for AntHandles {
 #[derive(Component)]
 struct Creature {
     velocity: Vec3,
+    desired_direction: Vec3,
 }
 
 fn setup(mut commands: Commands, ant_handles: Res<AntHandles>) {
@@ -84,35 +84,34 @@ fn setup(mut commands: Commands, ant_handles: Res<AntHandles>) {
         })
         .insert(Creature {
             velocity: Vec3::ZERO,
+            desired_direction: Vec3::ZERO,
         });
 }
 
-fn move_ants(
-    mut ants: Query<(&mut Transform, &mut Creature)>,
-    time: Res<Time>,
-    cursor_position: Res<CursorPosition>,
-) {
+fn move_ants(mut ants: Query<(&mut Transform, &mut Creature)>, time: Res<Time>) {
     let max_speed = 0.25;
     let steer_strength = 2.0;
-    if let Some(target) = cursor_position.pos {
-        let target = Vec3::new(target.x, 0.1, target.z);
-        for (mut transform, mut ant) in ants.iter_mut() {
-            let desired_direction = (target - transform.translation).normalize();
+    let wander_strength = 0.1;
+    for (mut transform, mut ant) in ants.iter_mut() {
+        ant.desired_direction = (ant.desired_direction
+            - Quat::from_rotation_y(rand::thread_rng().gen_range(0.0..(2.0 * PI)))
+                .mul_vec3(Vec3::X)
+                * wander_strength)
+            .normalize();
 
-            let desired_velocity = desired_direction * max_speed;
-            let desired_steering_force = (desired_velocity - ant.velocity) * steer_strength;
-            let acceleration = desired_steering_force.clamp_length_max(steer_strength);
+        let desired_velocity = ant.desired_direction * max_speed;
+        let desired_steering_force = (desired_velocity - ant.velocity) * steer_strength;
+        let acceleration = desired_steering_force.clamp_length_max(steer_strength);
 
-            ant.velocity =
-                (ant.velocity + acceleration * time.delta_seconds()).clamp_length_max(max_speed);
+        ant.velocity =
+            (ant.velocity + acceleration * time.delta_seconds()).clamp_length_max(max_speed);
 
-            let angle = if ant.velocity.x < 0.0 {
-                -ant.velocity.angle_between(Vec3::new(0.0, 0.0, 1.0))
-            } else {
-                ant.velocity.angle_between(Vec3::new(0.0, 0.0, 1.0))
-            };
-            transform.rotation = Quat::from_rotation_y(angle);
-            transform.translation += ant.velocity * time.delta_seconds();
-        }
+        let angle = if ant.velocity.x < 0.0 {
+            -ant.velocity.angle_between(Vec3::new(0.0, 0.0, 1.0))
+        } else {
+            ant.velocity.angle_between(Vec3::new(0.0, 0.0, 1.0))
+        };
+        transform.rotation = Quat::from_rotation_y(angle);
+        transform.translation += ant.velocity * time.delta_seconds();
     }
 }
