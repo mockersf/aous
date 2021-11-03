@@ -8,7 +8,7 @@ pub struct AntsPlugin;
 impl Plugin for AntsPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.init_resource::<AntHandles>()
-            .add_startup_system(setup)
+            .add_system(spawn_ant)
             .add_system(move_ants);
     }
 }
@@ -59,33 +59,39 @@ struct Creature {
     desired_direction: Vec3,
 }
 
-fn setup(mut commands: Commands, ant_handles: Res<AntHandles>) {
-    commands
-        .spawn_bundle((Transform::identity(), GlobalTransform::default()))
-        .with_children(|creature| {
-            creature.spawn_bundle(PbrBundle {
-                mesh: ant_handles.body_mesh.clone_weak(),
-                material: ant_handles.body_color.clone_weak(),
-                transform: Transform::from_rotation(Quat::from_rotation_x(FRAC_PI_2)),
-                ..Default::default()
+fn spawn_ant(
+    mut commands: Commands,
+    ant_handles: Res<AntHandles>,
+    keyboard_input: Res<Input<KeyCode>>,
+) {
+    if keyboard_input.pressed(KeyCode::Space) {
+        commands
+            .spawn_bundle((Transform::identity(), GlobalTransform::default()))
+            .with_children(|creature| {
+                creature.spawn_bundle(PbrBundle {
+                    mesh: ant_handles.body_mesh.clone_weak(),
+                    material: ant_handles.body_color.clone_weak(),
+                    transform: Transform::from_rotation(Quat::from_rotation_x(FRAC_PI_2)),
+                    ..Default::default()
+                });
+                creature.spawn_bundle(PbrBundle {
+                    mesh: ant_handles.eye_mesh.clone_weak(),
+                    material: ant_handles.eye_color.clone_weak(),
+                    transform: Transform::from_xyz(0.0075, 0.0075, 0.01875),
+                    ..Default::default()
+                });
+                creature.spawn_bundle(PbrBundle {
+                    mesh: ant_handles.eye_mesh.clone_weak(),
+                    material: ant_handles.eye_color.clone_weak(),
+                    transform: Transform::from_xyz(-0.0075, 0.0075, 0.01875),
+                    ..Default::default()
+                });
+            })
+            .insert(Creature {
+                velocity: Vec3::ZERO,
+                desired_direction: Vec3::ZERO,
             });
-            creature.spawn_bundle(PbrBundle {
-                mesh: ant_handles.eye_mesh.clone_weak(),
-                material: ant_handles.eye_color.clone_weak(),
-                transform: Transform::from_xyz(0.0075, 0.0075, 0.01875),
-                ..Default::default()
-            });
-            creature.spawn_bundle(PbrBundle {
-                mesh: ant_handles.eye_mesh.clone_weak(),
-                material: ant_handles.eye_color.clone_weak(),
-                transform: Transform::from_xyz(-0.0075, 0.0075, 0.01875),
-                ..Default::default()
-            });
-        })
-        .insert(Creature {
-            velocity: Vec3::ZERO,
-            desired_direction: Vec3::ZERO,
-        });
+    }
 }
 
 fn move_ants(mut ants: Query<(&mut Transform, &mut Creature)>, time: Res<Time>) {
