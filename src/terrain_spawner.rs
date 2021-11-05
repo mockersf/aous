@@ -13,6 +13,7 @@ use bevy::{
 };
 use bevy_mod_raycast::{BoundVol, RayCastMesh};
 use bracket_noise::prelude::{FastNoise, FractalType, NoiseType};
+use rand::Rng;
 
 use crate::{BORDER, DEF};
 
@@ -37,9 +38,18 @@ impl EmptyLot {
 
 pub struct TerrainSpawnerPlugin;
 
+pub struct NoiseSeeds {
+    elevation: u64,
+    moisture: u64,
+}
+
 impl Plugin for TerrainSpawnerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(fill_empty_lots);
+        app.insert_resource(NoiseSeeds {
+            elevation: rand::thread_rng().gen(),
+            moisture: rand::thread_rng().gen(),
+        })
+        .add_system(fill_empty_lots);
     }
 }
 
@@ -61,6 +71,7 @@ fn fill_empty_lots(
     mut textures: ResMut<Assets<Texture>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut mesh_cache: Local<HashMap<IVec2, HandledLot>>,
+    noise_seeds: Res<NoiseSeeds>,
 ) {
     for (entity, position) in lots.iter() {
         commands
@@ -98,9 +109,9 @@ fn fill_empty_lots(
     }
 }
 
-fn generate_lot(x: i32, z: i32) -> Lot {
+fn generate_lot(x: i32, z: i32, noise_seeds: &NoiseSeeds) -> Lot {
     debug!("generating mesh for {} / {}", x, z);
-    let mut elevation_noise = FastNoise::seeded(0);
+    let mut elevation_noise = FastNoise::seeded(noise_seeds.elevation);
     elevation_noise.set_noise_type(NoiseType::PerlinFractal);
     elevation_noise.set_fractal_type(FractalType::FBM);
     elevation_noise.set_fractal_octaves(7);
@@ -108,7 +119,7 @@ fn generate_lot(x: i32, z: i32) -> Lot {
     elevation_noise.set_fractal_lacunarity(2.0);
     elevation_noise.set_frequency(2.0);
 
-    let mut moisture_noise = FastNoise::seeded(7);
+    let mut moisture_noise = FastNoise::seeded(noise_seeds.moisture);
     moisture_noise.set_noise_type(NoiseType::PerlinFractal);
     moisture_noise.set_fractal_type(FractalType::FBM);
     moisture_noise.set_fractal_octaves(5);
