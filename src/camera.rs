@@ -3,7 +3,7 @@ use std::collections::hash_map::Entry;
 use bevy::{prelude::*, render::camera::Camera, utils::HashMap};
 use bevy_mod_raycast::RayCastSource;
 
-use crate::terrain_spawner::EmptyLot;
+use crate::{terrain_spawner::EmptyLot, BORDER};
 
 pub struct CameraPlugin;
 
@@ -132,29 +132,40 @@ fn rotator(time: Res<Time>, mut query: Query<&mut Transform, With<Rotates>>) {
 }
 
 fn move_camera(
-    mut query: Query<&mut Transform, With<CameraParent>>,
+    mut query: QuerySet<(
+        QueryState<&mut Transform, With<CameraParent>>,
+        QueryState<&Transform, With<CameraParent>>,
+    )>,
     input: Res<Input<KeyCode>>,
     time: Res<Time>,
 ) {
+    let transform = query.q1().single();
     let move_by = time.delta_seconds();
     let mut move_to = Vec3::ZERO;
     let mut moving = false;
     if input.pressed(KeyCode::Left) {
-        moving = true;
-        move_to.x = 1.0;
+        if transform.translation.x < BORDER {
+            moving = true;
+            move_to.x = 1.0;
+        }
     } else if input.pressed(KeyCode::Right) {
-        moving = true;
-        move_to.x = -1.0;
+        if transform.translation.x > -BORDER {
+            moving = true;
+            move_to.x = -1.0;
+        }
     };
     if input.pressed(KeyCode::Up) {
-        moving = true;
-        move_to.z = 1.0;
+        if transform.translation.z < BORDER {
+            moving = true;
+            move_to.z = 1.0;
+        }
     } else if input.pressed(KeyCode::Down) {
-        moving = true;
-        move_to.z = -1.0;
+        if transform.translation.z > -BORDER {
+            moving = true;
+            move_to.z = -1.0;
+        }
     }
     if moving {
-        let mut transform = query.get_single_mut().unwrap();
-        transform.translation += move_to.normalize() * move_by;
+        query.q0().single_mut().translation += move_to.normalize() * move_by;
     }
 }

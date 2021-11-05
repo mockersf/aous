@@ -10,6 +10,9 @@ mod terrain_spawner;
 
 struct RaycastCameraToGround;
 
+const BORDER: f32 = 3.0;
+const DEF: f32 = 20.0;
+
 fn main() {
     App::new()
         .insert_resource(WindowDescriptor {

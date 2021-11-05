@@ -13,6 +13,8 @@ use bevy::{
 use bevy_mod_raycast::{BoundVol, RayCastMesh};
 use bracket_noise::prelude::{FastNoise, FractalType, NoiseType};
 
+use crate::{BORDER, DEF};
+
 #[derive(Debug)]
 pub struct EmptyLot {
     x: i32,
@@ -135,29 +137,32 @@ fn generate_lot(x: i32, z: i32) -> Lot {
     let mut colors = Vec::new();
     let mut metallic_roughness = Vec::new();
 
-    let def = 15.0;
 
-    for i in 0..=(def as i32) {
-        for j in 0..=(def as i32) {
-            let nx = x as f32 + i as f32 / def;
-            let nz = z as f32 + j as f32 / def;
+    for i in 0..=(DEF as i32) {
+        for j in 0..=(DEF as i32) {
+            let nx = x as f32 + i as f32 / DEF;
+            let nz = z as f32 + j as f32 / DEF;
             let get_elevation = |x, z, dx, dz| {
                 let elevation = elevation_noise.get_noise(x + dx, z + dz);
-                (
-                    elevation,
-                    elevation / 25.0 + if elevation > 0.25 { 0.4 } else { 0.0 },
-                )
+                if x > BORDER || x < -BORDER || z > BORDER || z < -BORDER {
+                    (elevation + 0.4, 0.41 + elevation / 10.0)
+                } else {
+                    (
+                        elevation,
+                        elevation / 25.0 + if elevation > 0.25 { 0.4 } else { 0.0 },
+                    )
+                }
             };
 
             let (elevation, elevation_mod) =
-                get_elevation(x as f32, z as f32, i as f32 / def, j as f32 / def);
+                get_elevation(x as f32, z as f32, i as f32 / DEF, j as f32 / DEF);
 
             let mut neighbours = Vec::new();
             for di in -1..=1 {
                 for dj in -1..=1 {
                     if di != 0 || dj != 0 {
-                        let de = get_elevation(nx, nz, di as f32 / def, dj as f32 / def).1;
-                        neighbours.push([di as f32 / def, de, dj as f32 / def]);
+                        let de = get_elevation(nx, nz, di as f32 / DEF, dj as f32 / DEF).1;
+                        neighbours.push([di as f32 / DEF, de, dj as f32 / DEF]);
                     }
                 }
             }
@@ -186,9 +191,9 @@ fn generate_lot(x: i32, z: i32) -> Lot {
             let normal = normal.normalize();
 
             vertices.push((
-                [i as f32 / def - 0.5, elevation_mod, j as f32 / def - 0.5],
+                [i as f32 / DEF - 0.5, elevation_mod, j as f32 / DEF - 0.5],
                 [normal.x, normal.y, normal.z],
-                [j as f32 / def, i as f32 / def],
+                [j as f32 / DEF, i as f32 / DEF],
             ));
 
             let moisture = moisture_noise.get_noise(nx, nz);
@@ -218,15 +223,15 @@ fn generate_lot(x: i32, z: i32) -> Lot {
     }
 
     Lot {
-        mesh: vertices_as_mesh(vertices, def as u32),
+        mesh: vertices_as_mesh(vertices, DEF as u32),
         color: Texture::new(
-            Extent3d::new(def as u32 + 1, def as u32 + 1, 1),
+            Extent3d::new(DEF as u32 + 1, DEF as u32 + 1, 1),
             TextureDimension::D2,
             colors,
             TextureFormat::Rgba8UnormSrgb,
         ),
         metallic_roughness: Texture::new(
-            Extent3d::new(def as u32 + 1, def as u32 + 1, 1),
+            Extent3d::new(DEF as u32 + 1, DEF as u32 + 1, 1),
             TextureDimension::D2,
             metallic_roughness,
             TextureFormat::Rgba8UnormSrgb,
