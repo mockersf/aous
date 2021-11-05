@@ -1,4 +1,4 @@
-use std::collections::{hash_map::Entry, HashMap};
+use std::collections::hash_map::Entry;
 
 use bevy::{
     ecs::component::SparseStorage,
@@ -9,6 +9,7 @@ use bevy::{
         pipeline::PrimitiveTopology,
         texture::{Extent3d, TextureDimension, TextureFormat},
     },
+    utils::HashMap,
 };
 use bevy_mod_raycast::{BoundVol, RayCastMesh};
 use bracket_noise::prelude::{FastNoise, FractalType, NoiseType};
