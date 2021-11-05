@@ -103,7 +103,7 @@ fn refresh_visible_lots(
                         vacant.insert(
                             commands
                                 .spawn_bundle((
-                                    EmptyLot::new(position),
+                                    EmptyLot::new(position, false),
                                     Transform::from_xyz(position.x as f32, 0.0, position.y as f32),
                                     GlobalTransform::identity(),
                                 ))

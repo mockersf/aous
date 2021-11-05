@@ -21,6 +21,7 @@ use crate::{BORDER, DEF};
 pub struct EmptyLot {
     x: i32,
     z: i32,
+    offscreen: bool,
 }
 
 impl Component for EmptyLot {
@@ -28,15 +29,33 @@ impl Component for EmptyLot {
 }
 
 impl EmptyLot {
-    pub fn new(position: IVec2) -> Self {
+    pub fn new(position: IVec2, offscreen: bool) -> Self {
         EmptyLot {
             x: position.x,
             z: position.y,
+            offscreen,
         }
     }
 }
 
 pub struct TerrainSpawnerPlugin;
+
+#[derive(Default)]
+pub struct ObstacleMap {
+    pub obstacle_map: HashMap<IVec2, bool>,
+}
+
+impl ObstacleMap {
+    pub fn is_obstacle(&self, x: f32, z: f32, width: f32) -> bool {
+        *self
+            .obstacle_map
+            .get(&IVec2::new(
+                (x * DEF + DEF / 2.0) as i32,
+                (z * DEF + DEF / 2.0) as i32,
+            ))
+            .unwrap_or(&false)
+    }
+}
 
 pub struct NoiseSeeds {
     elevation: u64,
@@ -49,6 +68,7 @@ impl Plugin for TerrainSpawnerPlugin {
             elevation: rand::thread_rng().gen(),
             moisture: rand::thread_rng().gen(),
         })
+        .init_resource::<ObstacleMap>()
         .add_system(fill_empty_lots);
     }
 }
@@ -57,6 +77,7 @@ struct Lot {
     mesh: Mesh,
     color: Texture,
     metallic_roughness: Texture,
+    obstacle_map: HashMap<IVec2, bool>,
 }
 
 struct HandledLot {
@@ -71,41 +92,45 @@ fn fill_empty_lots(
     mut textures: ResMut<Assets<Texture>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut mesh_cache: Local<HashMap<IVec2, HandledLot>>,
+    mut obstacle_map: ResMut<ObstacleMap>,
     noise_seeds: Res<NoiseSeeds>,
 ) {
     for (entity, position) in lots.iter() {
-        commands
-            .entity(entity)
-            .with_children(|lot| {
-                let mesh = mesh_cache
-                    .entry(IVec2::new(position.x, position.z))
-                    .or_insert_with(|| {
-                        let lot = generate_lot(position.x, position.z);
-                        HandledLot {
-                            mesh: meshes.add(lot.mesh),
-                            color: materials.add(StandardMaterial {
-                                base_color: Color::WHITE,
-                                base_color_texture: Some(textures.add(lot.color)),
-                                roughness: 1.0,
-                                metallic: 1.0,
-                                metallic_roughness_texture: Some(
-                                    textures.add(lot.metallic_roughness),
-                                ),
-                                ..Default::default()
-                            }),
-                        }
-                    });
-                lot.spawn_bundle(PbrBundle {
-                    mesh: mesh.mesh.clone_weak(),
-                    material: mesh.color.clone_weak(),
-                    ..Default::default()
+        let mesh = mesh_cache
+            .entry(IVec2::new(position.x, position.z))
+            .or_insert_with(|| {
+                let lot = generate_lot(position.x, position.z, &*noise_seeds);
+                obstacle_map.obstacle_map.extend(lot.obstacle_map);
+                HandledLot {
+                    mesh: meshes.add(lot.mesh),
+                    color: materials.add(StandardMaterial {
+                        base_color: Color::WHITE,
+                        base_color_texture: Some(textures.add(lot.color)),
+                        roughness: 1.0,
+                        metallic: 1.0,
+                        metallic_roughness_texture: Some(textures.add(lot.metallic_roughness)),
+                        ..Default::default()
+                    }),
+                }
+            });
+        if !position.offscreen {
+            commands
+                .entity(entity)
+                .with_children(|lot| {
+                    lot.spawn_bundle(PbrBundle {
+                        mesh: mesh.mesh.clone_weak(),
+                        material: mesh.color.clone_weak(),
+                        ..Default::default()
+                    })
+                    .insert_bundle((
+                        BoundVol { sphere: None },
+                        RayCastMesh::<crate::RaycastCameraToGround>::default(),
+                    ));
                 })
-                .insert_bundle((
-                    BoundVol { sphere: None },
-                    RayCastMesh::<crate::RaycastCameraToGround>::default(),
-                ));
-            })
-            .remove::<EmptyLot>();
+                .remove::<EmptyLot>();
+        } else {
+            commands.entity(entity).remove::<EmptyLot>();
+        }
     }
 }
 
@@ -149,6 +174,7 @@ fn generate_lot(x: i32, z: i32, noise_seeds: &NoiseSeeds) -> Lot {
     let mut colors = Vec::new();
     let mut metallic_roughness = Vec::new();
 
+    let mut obstacle_map = HashMap::default();
 
     for i in 0..=(DEF as i32) {
         for j in 0..=(DEF as i32) {
@@ -170,14 +196,23 @@ fn generate_lot(x: i32, z: i32, noise_seeds: &NoiseSeeds) -> Lot {
                 get_elevation(x as f32, z as f32, i as f32 / DEF, j as f32 / DEF);
 
             let mut neighbours = Vec::new();
+            let mut has_obstacle_in_neighbours = false;
             for di in -1..=1 {
                 for dj in -1..=1 {
                     if di != 0 || dj != 0 {
                         let de = get_elevation(nx, nz, di as f32 / DEF, dj as f32 / DEF).1;
                         neighbours.push([di as f32 / DEF, de, dj as f32 / DEF]);
+                        if de > 0.4 {
+                            has_obstacle_in_neighbours = true;
+                        }
                     }
                 }
             }
+            obstacle_map.insert(
+                IVec2::new(x * DEF as i32 + i, z * DEF as i32 + j),
+                elevation_mod > 0.4 || has_obstacle_in_neighbours,
+            );
+
             let mut normal = Vec3::ZERO;
             for (b, c) in [
                 (0, 1),
@@ -248,6 +283,7 @@ fn generate_lot(x: i32, z: i32, noise_seeds: &NoiseSeeds) -> Lot {
             metallic_roughness,
             TextureFormat::Rgba8UnormSrgb,
         ),
+        obstacle_map,
     }
 }
 type Node = ([f32; 3], [f32; 3], [f32; 2]);
@@ -259,7 +295,7 @@ fn vertices_as_mesh(vertices: Vec<Node>, details: u32) -> Mesh {
     let mut indices = Vec::new();
 
     let mut n = 0;
-    let mut pushed = HashMap::new();
+    let mut pushed = HashMap::default();
 
     let mut push = |data: Node| match pushed.entry(IVec2::new(
         (data.0[0] * details as f32 * 2.0) as i32,

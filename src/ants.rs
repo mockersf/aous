@@ -3,6 +3,8 @@ use std::f32::consts::{FRAC_PI_2, PI};
 use bevy::prelude::*;
 use rand::Rng;
 
+use crate::terrain_spawner::{EmptyLot, ObstacleMap};
+
 pub struct AntsPlugin;
 
 impl Plugin for AntsPlugin {
@@ -57,6 +59,7 @@ impl FromWorld for AntHandles {
 struct Creature {
     velocity: Vec3,
     desired_direction: Vec3,
+    wander_strength: f32,
 }
 
 fn spawn_ant(
@@ -90,19 +93,24 @@ fn spawn_ant(
             .insert(Creature {
                 velocity: Vec3::ZERO,
                 desired_direction: Vec3::ZERO,
+                wander_strength: 0.1,
             });
     }
 }
 
-fn move_ants(mut ants: Query<(&mut Transform, &mut Creature)>, time: Res<Time>) {
+fn move_ants(
+    mut commands: Commands,
+    mut ants: Query<(&mut Transform, &mut Creature)>,
+    time: Res<Time>,
+    obstacle_map: Res<ObstacleMap>,
+) {
     let max_speed = 0.25;
     let steer_strength = 2.0;
-    let wander_strength = 0.1;
     for (mut transform, mut ant) in ants.iter_mut() {
         ant.desired_direction = (ant.desired_direction
             - Quat::from_rotation_y(rand::thread_rng().gen_range(0.0..(2.0 * PI)))
                 .mul_vec3(Vec3::X)
-                * wander_strength)
+                * ant.wander_strength)
             .normalize();
 
         let desired_velocity = ant.desired_direction * max_speed;
@@ -117,7 +125,18 @@ fn move_ants(mut ants: Query<(&mut Transform, &mut Creature)>, time: Res<Time>) 
         } else {
             ant.velocity.angle_between(Vec3::new(0.0, 0.0, 1.0))
         };
-        transform.rotation = Quat::from_rotation_y(angle);
-        transform.translation += ant.velocity * time.delta_seconds();
+        let forward = transform.translation + ant.velocity * time.delta_seconds();
+        if !obstacle_map.is_obstacle(forward.x, forward.z, 0.0) {
+            transform.rotation = Quat::from_rotation_y(angle);
+            transform.translation = forward;
+            ant.wander_strength = 0.1;
+            let position = IVec2::new(
+                transform.translation.x as i32,
+                transform.translation.z as i32,
+            );
+            commands.spawn_bundle((EmptyLot::new(position, true),));
+        } else {
+            ant.wander_strength += 0.5;
+        }
     }
 }
