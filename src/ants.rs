@@ -3,7 +3,10 @@ use std::f32::consts::{FRAC_PI_2, PI};
 use bevy::prelude::*;
 use rand::Rng;
 
-use crate::terrain_spawner::{EmptyLot, ObstacleMap};
+use crate::{
+    terrain_spawner::{EmptyLot, ObstacleMap},
+    DEF,
+};
 
 pub struct AntsPlugin;
 
@@ -126,7 +129,8 @@ fn move_ants(
             ant.velocity.angle_between(Vec3::new(0.0, 0.0, 1.0))
         };
         let forward = transform.translation + ant.velocity * time.delta_seconds();
-        if !obstacle_map.is_obstacle(forward.x, forward.z, 0.0) {
+        let forward_forward = transform.translation + ant.velocity / DEF * 2.0;
+        if !obstacle_map.is_obstacle(forward_forward.x, forward_forward.z, 0.0) {
             transform.rotation = Quat::from_rotation_y(angle);
             transform.translation = forward;
             ant.wander_strength = 0.1;
