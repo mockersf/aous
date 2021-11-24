@@ -4,9 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-bevy = { git = "https://github.com/bevyengine/bevy", branch = "main" }
+bevy = { git = "https://github.com/cart/bevy", branch = "merge-renderer" }
 bracket-noise = "0.8"
-bevy_mod_raycast = { git = "https://github.com/aevyrie/bevy_mod_raycast" }
+# bevy_mod_raycast = { git = "https://github.com/aevyrie/bevy_mod_raycast" }
 rand = "0.8"
 
 [profile.dev.package."*"]

@@ -1,7 +1,7 @@
 use std::collections::hash_map::Entry;
 
 use bevy::{prelude::*, render::camera::Camera, utils::HashMap};
-use bevy_mod_raycast::RayCastSource;
+// use bevy_mod_raycast::RayCastSource;
 
 use crate::{terrain_spawner::EmptyLot, BORDER};
 
@@ -27,15 +27,20 @@ fn setup(mut commands: Commands) {
             CameraParent,
         ))
         .with_children(|camera_placer| {
+            camera_placer.spawn_bundle(bevy::render2::camera::PerspectiveCameraBundle {
+                transform: Transform::from_xyz(0.0, 3.0, -0.2).looking_at(Vec3::ZERO, Vec3::Y),
+                ..Default::default()
+            });
+            // .insert(RayCastSource::<crate::RaycastCameraToGround>::new_transform_empty());
             camera_placer
-                .spawn_bundle(PerspectiveCameraBundle {
-                    transform: Transform::from_xyz(0.0, 3.0, -0.2).looking_at(Vec3::ZERO, Vec3::Y),
-                    ..Default::default()
-                })
-                .insert(RayCastSource::<crate::RaycastCameraToGround>::new_transform_empty());
-            camera_placer
-                .spawn_bundle(PointLightBundle {
+                .spawn_bundle(bevy::pbr2::PointLightBundle {
                     transform: Transform::from_xyz(-10.0, 8.0, 0.0),
+                    point_light: bevy::pbr2::PointLight {
+                        intensity: 1600.0,
+                        range: 100.0,
+                        shadows_enabled: true,
+                        ..Default::default()
+                    },
                     ..Default::default()
                 })
                 .insert(Rotates);
@@ -45,7 +50,7 @@ fn setup(mut commands: Commands) {
 fn refresh_visible_lots(
     mut commands: Commands,
     windows: Res<Windows>,
-    camera: Query<(&Camera, &GlobalTransform)>,
+    camera: Query<(&bevy::render2::camera::Camera, &GlobalTransform)>,
     mut visible_lots: Local<HashMap<IVec2, Entity>>,
 ) {
     let window_width = windows.get_primary().unwrap().width();
@@ -126,7 +131,7 @@ pub struct Rotates;
 fn rotator(time: Res<Time>, mut query: Query<&mut Transform, With<Rotates>>) {
     for mut transform in query.iter_mut() {
         *transform = Transform::from_rotation(Quat::from_rotation_y(
-            (4.0 * std::f32::consts::PI / 50.0) * time.delta_seconds(),
+            (4.0 * std::f32::consts::PI / 500.0) * time.delta_seconds(),
         )) * *transform;
     }
 }
