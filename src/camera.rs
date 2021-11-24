@@ -79,7 +79,7 @@ fn refresh_visible_lots(
                 Vec3::new(position.x as f32, 0.0, position.y as f32),
             ) {
                 if !is_on_screen(screen_position) {
-                    debug!("despawning {:?}", position);
+                    debug!("despawning {:?} ({:?})", position, entity);
                     commands.entity(*entity).despawn_recursive();
                     return false;
                 }
@@ -143,27 +143,19 @@ fn move_camera(
     let move_by = time.delta_seconds();
     let mut move_to = Vec3::ZERO;
     let mut moving = false;
-    if input.pressed(KeyCode::Left) {
-        if transform.translation.x < BORDER {
-            moving = true;
-            move_to.x = 1.0;
-        }
-    } else if input.pressed(KeyCode::Right) {
-        if transform.translation.x > -BORDER {
-            moving = true;
-            move_to.x = -1.0;
-        }
-    };
-    if input.pressed(KeyCode::Up) {
-        if transform.translation.z < BORDER {
-            moving = true;
-            move_to.z = 1.0;
-        }
-    } else if input.pressed(KeyCode::Down) {
-        if transform.translation.z > -BORDER {
-            moving = true;
-            move_to.z = -1.0;
-        }
+    if input.pressed(KeyCode::Left) && transform.translation.x < BORDER {
+        moving = true;
+        move_to.x = 1.0;
+    } else if input.pressed(KeyCode::Right) && transform.translation.x > -BORDER {
+        moving = true;
+        move_to.x = -1.0;
+    }
+    if input.pressed(KeyCode::Up) && transform.translation.z < BORDER {
+        moving = true;
+        move_to.z = 1.0;
+    } else if input.pressed(KeyCode::Down) && transform.translation.z > -BORDER {
+        moving = true;
+        move_to.z = -1.0;
     }
     if moving {
         query.q0().single_mut().translation += move_to.normalize() * move_by;
