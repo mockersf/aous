@@ -46,7 +46,7 @@ pub struct ObstacleMap {
 }
 
 impl ObstacleMap {
-    pub fn is_obstacle(&self, x: f32, z: f32, width: f32) -> bool {
+    pub fn is_obstacle(&self, x: f32, z: f32, _width: f32) -> bool {
         *self
             .obstacle_map
             .get(&IVec2::new(
@@ -180,15 +180,21 @@ fn generate_lot(x: i32, z: i32, noise_seeds: &NoiseSeeds) -> Lot {
         for j in 0..=(DEF as i32) {
             let nx = x as f32 + i as f32 / DEF;
             let nz = z as f32 + j as f32 / DEF;
-            let get_elevation = |x, z, dx, dz| {
-                let elevation = elevation_noise.get_noise(x + dx, z + dz);
-                if x > BORDER || x < -BORDER || z > BORDER || z < -BORDER {
-                    (elevation + 0.4, 0.41 + elevation / 10.0)
+            let get_elevation = |x: f32, z: f32, dx: f32, dz: f32| {
+                let px = x + dx - 0.5;
+                let pz = z + dz - 0.5;
+                if px.powf(2.0) + pz.powf(2.0) < 0.05 {
+                    (0.0, 0.005)
                 } else {
-                    (
-                        elevation,
-                        elevation / 25.0 + if elevation > 0.25 { 0.4 } else { 0.0 },
-                    )
+                    let elevation = elevation_noise.get_noise(px, pz);
+                    if !(-BORDER..=BORDER).contains(&px) || !(-BORDER..=BORDER).contains(&pz) {
+                        (elevation + 0.4, 0.41 + elevation / 10.0)
+                    } else {
+                        (
+                            elevation,
+                            elevation / 25.0 + if elevation > 0.25 { 0.4 } else { 0.0 },
+                        )
+                    }
                 }
             };
 
