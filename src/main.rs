@@ -4,6 +4,7 @@ use bevy::{
 };
 use bevy_mod_raycast::{DefaultRaycastingPlugin, RayCastMethod, RayCastSource, RaycastSystem};
 
+mod ant_hill;
 mod ants;
 mod camera;
 mod terrain_spawner;
@@ -32,6 +33,7 @@ fn main() {
         .add_plugin(camera::CameraPlugin)
         .add_plugin(terrain_spawner::TerrainSpawnerPlugin)
         .add_plugin(ants::AntsPlugin)
+        .add_plugin(ant_hill::AntHillPlugin)
         .init_resource::<CursorPosition>()
         .add_system_to_stage(
             CoreStage::PreUpdate,
