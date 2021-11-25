@@ -80,24 +80,30 @@ fn spawn_ant(
         commands
             .spawn_bundle((Transform::identity(), GlobalTransform::default()))
             .with_children(|creature| {
-                creature.spawn_bundle(bevy::pbr2::PbrBundle {
-                    mesh: ant_handles.body_mesh.clone_weak(),
-                    material: ant_handles.body_color.clone_weak(),
-                    transform: Transform::from_rotation(Quat::from_rotation_x(FRAC_PI_2)),
-                    ..Default::default()
-                });
-                creature.spawn_bundle(bevy::pbr2::PbrBundle {
-                    mesh: ant_handles.eye_mesh.clone_weak(),
-                    material: ant_handles.eye_color.clone_weak(),
-                    transform: Transform::from_xyz(0.0075, 0.0075, 0.01875),
-                    ..Default::default()
-                });
-                creature.spawn_bundle(bevy::pbr2::PbrBundle {
-                    mesh: ant_handles.eye_mesh.clone_weak(),
-                    material: ant_handles.eye_color.clone_weak(),
-                    transform: Transform::from_xyz(-0.0075, 0.0075, 0.01875),
-                    ..Default::default()
-                });
+                creature
+                    .spawn_bundle(bevy::pbr2::PbrBundle {
+                        mesh: ant_handles.body_mesh.clone_weak(),
+                        material: ant_handles.body_color.clone_weak(),
+                        transform: Transform::from_rotation(Quat::from_rotation_x(FRAC_PI_2)),
+                        ..Default::default()
+                    })
+                    .insert(bevy::pbr2::NotShadowCaster);
+                creature
+                    .spawn_bundle(bevy::pbr2::PbrBundle {
+                        mesh: ant_handles.eye_mesh.clone_weak(),
+                        material: ant_handles.eye_color.clone_weak(),
+                        transform: Transform::from_xyz(0.0075, 0.0075, 0.01875),
+                        ..Default::default()
+                    })
+                    .insert(bevy::pbr2::NotShadowCaster);
+                creature
+                    .spawn_bundle(bevy::pbr2::PbrBundle {
+                        mesh: ant_handles.eye_mesh.clone_weak(),
+                        material: ant_handles.eye_color.clone_weak(),
+                        transform: Transform::from_xyz(-0.0075, 0.0075, 0.01875),
+                        ..Default::default()
+                    })
+                    .insert(bevy::pbr2::NotShadowCaster);
             })
             .insert(Creature {
                 velocity: Vec3::ZERO,
