@@ -48,7 +48,7 @@ impl FromWorld for AntHandles {
             .get_resource_mut::<Assets<bevy::pbr2::StandardMaterial>>()
             .unwrap();
         let body_color = materials.add(bevy::pbr2::StandardMaterial {
-            base_color: bevy::render2::color::Color::BLUE,
+            base_color: bevy::render2::color::Color::rgb(0.3, 0.3, 0.3),
             perceptual_roughness: 1.0,
             metallic: 0.0,
             ..Default::default()
