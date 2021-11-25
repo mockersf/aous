@@ -18,7 +18,7 @@ const DEF: f32 = 20.0;
 fn main() {
     App::new()
         .insert_resource(WindowDescriptor {
-            title: "Ants Of Unusual Size".to_string(),
+            title: "Ants Of Unusual Shape".to_string(),
             ..Default::default()
         })
         .insert_resource(bevy::log::LogSettings {
