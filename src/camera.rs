@@ -1,6 +1,6 @@
 use std::collections::hash_map::Entry;
 
-use bevy::{prelude::*, render::camera::Camera, utils::HashMap};
+use bevy::{prelude::*, utils::HashMap};
 // use bevy_mod_raycast::RayCastSource;
 
 use crate::{terrain_spawner::EmptyLot, BORDER};
@@ -9,8 +9,11 @@ pub struct CameraPlugin;
 
 impl Plugin for CameraPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_startup_system(setup)
-            .add_system(move_camera)
+        app.add_startup_system(setup);
+        app.insert_resource(bevy::pbr2::PointLightShadowMap {
+            size: 2_usize.pow(12),
+        });
+        app.add_system(move_camera)
             .add_system(refresh_visible_lots)
             .add_system(rotator);
     }

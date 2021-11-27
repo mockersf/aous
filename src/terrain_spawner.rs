@@ -1,16 +1,6 @@
 use std::collections::hash_map::Entry;
 
-use bevy::{
-    ecs::component::SparseStorage,
-    math::const_vec3,
-    prelude::*,
-    render::{
-        mesh::Indices,
-        pipeline::PrimitiveTopology,
-        texture::{Extent3d, TextureDimension, TextureFormat},
-    },
-    utils::HashMap,
-};
+use bevy::{ecs::component::SparseStorage, math::const_vec3, prelude::*, utils::HashMap};
 // use bevy_mod_raycast::{BoundVol, RayCastMesh};
 use bracket_noise::prelude::{FastNoise, FractalType, NoiseType};
 use rand::Rng;
@@ -152,8 +142,8 @@ fn generate_lot(x: i32, z: i32, noise_seeds: &NoiseSeeds) -> Lot {
     moisture_noise.set_fractal_lacunarity(2.0);
     moisture_noise.set_frequency(2.0);
 
-    const fn color_to_vec3(color: Color) -> Vec3 {
-        if let Color::Rgba {
+    const fn color_to_vec3(color: bevy::render2::color::Color) -> Vec3 {
+        if let bevy::render2::color::Color::Rgba {
             red,
             green,
             blue,
@@ -165,10 +155,10 @@ fn generate_lot(x: i32, z: i32, noise_seeds: &NoiseSeeds) -> Lot {
             const_vec3!([0.0, 0.0, 0.0])
         }
     }
-    let moisture_mountain = color_to_vec3(Color::ALICE_BLUE);
-    let moisture_prairie = color_to_vec3(Color::GREEN);
-    let arid_mountain = color_to_vec3(Color::ANTIQUE_WHITE);
-    let arid_prairie = color_to_vec3(Color::GRAY);
+    let moisture_mountain = color_to_vec3(bevy::render2::color::Color::ALICE_BLUE);
+    let moisture_prairie = color_to_vec3(bevy::render2::color::Color::GREEN);
+    let arid_mountain = color_to_vec3(bevy::render2::color::Color::ANTIQUE_WHITE);
+    let arid_prairie = color_to_vec3(bevy::render2::color::Color::GRAY);
 
     let mut vertices = Vec::new();
     let mut colors = Vec::new();
@@ -344,9 +334,9 @@ fn vertices_as_mesh(vertices: Vec<Node>, details: u32) -> bevy::render2::mesh::M
     let mut mesh = bevy::render2::mesh::Mesh::new(
         bevy::render2::render_resource::PrimitiveTopology::TriangleList,
     );
-    mesh.set_attribute(Mesh::ATTRIBUTE_POSITION, positions);
-    mesh.set_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
-    mesh.set_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
+    mesh.set_attribute(bevy::render2::mesh::Mesh::ATTRIBUTE_POSITION, positions);
+    mesh.set_attribute(bevy::render2::mesh::Mesh::ATTRIBUTE_NORMAL, normals);
+    mesh.set_attribute(bevy::render2::mesh::Mesh::ATTRIBUTE_UV_0, uvs);
     mesh.set_indices(Some(bevy::render2::mesh::Indices::U32(indices)));
     mesh
 }
