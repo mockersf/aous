@@ -3,7 +3,7 @@ use std::{f32::consts::PI, time::Duration};
 use bevy::{pbr2::NotShadowCaster, prelude::*};
 use rand::Rng;
 
-use crate::BORDER;
+use crate::{BORDER, DEF};
 
 pub struct FoodPlugin;
 
@@ -53,6 +53,9 @@ impl FromWorld for FoodHandles {
 #[derive(Component)]
 pub struct FoodPellet;
 
+#[derive(Component)]
+pub struct FoodHeap;
+
 fn spawn_food(
     mut commands: Commands,
     food_handles: Res<FoodHandles>,
@@ -61,26 +64,30 @@ fn spawn_food(
 ) {
     if timer.tick(time.delta()).just_finished() {
         let mut rn = rand::thread_rng();
-        let center = Vec3::new(
-            rn.gen_range(-BORDER..BORDER),
-            0.0,
-            rn.gen_range(-BORDER..BORDER),
-        );
-        // debug!("spawning food at {:?}", transform.translation);
-        for _ in 0..rn.gen_range(80..100) {
-            let transform = Transform::from_translation(
-                center
-                    + Quat::from_rotation_y(rn.gen_range(0.0..(2.0 * PI)))
-                        .mul_vec3(Vec3::X * rn.gen_range(0.0..0.1)),
-            );
-            commands
-                .spawn_bundle(bevy::pbr2::PbrBundle {
-                    mesh: food_handles.mesh.clone_weak(),
-                    material: food_handles.color.clone_weak(),
-                    transform,
-                    ..Default::default()
-                })
-                .insert_bundle((FoodPellet, NotShadowCaster));
-        }
+        commands
+            .spawn_bundle((
+                Transform::from_xyz(
+                    rn.gen_range(-BORDER..BORDER),
+                    0.0,
+                    rn.gen_range(-BORDER..BORDER),
+                ),
+                GlobalTransform::default(),
+                FoodHeap,
+            ))
+            .with_children(|heap| {
+                for _ in 0..rn.gen_range(80..100) {
+                    let transform = Transform::from_translation(
+                        Quat::from_rotation_y(rn.gen_range(0.0..(2.0 * PI)))
+                            .mul_vec3(Vec3::X * rn.gen_range(0.0..(1.0 / DEF * 2.0))),
+                    );
+                    heap.spawn_bundle(bevy::pbr2::PbrBundle {
+                        mesh: food_handles.mesh.clone_weak(),
+                        material: food_handles.color.clone_weak(),
+                        transform,
+                        ..Default::default()
+                    })
+                    .insert_bundle((FoodPellet, NotShadowCaster));
+                }
+            });
     }
 }

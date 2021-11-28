@@ -1,9 +1,13 @@
-use std::f32::consts::{FRAC_PI_2, PI};
+use std::{
+    f32::consts::{FRAC_PI_2, PI},
+    ops::Deref,
+};
 
-use bevy::prelude::*;
+use bevy::{prelude::*, utils::HashSet};
 use rand::Rng;
 
 use crate::{
+    food::{FoodHeap, FoodPellet},
     terrain_spawner::{EmptyLot, ObstacleMap},
     DEF,
 };
@@ -64,11 +68,18 @@ impl FromWorld for AntHandles {
     }
 }
 
+enum AntState {
+    Wander,
+    PickFood(Vec3, Entity),
+    HasFood,
+}
+
 #[derive(Component)]
 struct Creature {
     velocity: Vec3,
     desired_direction: Vec3,
     wander_strength: f32,
+    state: AntState,
 }
 
 fn spawn_ant(
@@ -109,6 +120,7 @@ fn spawn_ant(
                 velocity: Vec3::ZERO,
                 desired_direction: Vec3::ZERO,
                 wander_strength: 0.1,
+                state: AntState::Wander,
             });
     }
 }
@@ -116,12 +128,35 @@ fn spawn_ant(
 fn move_ants(
     mut commands: Commands,
     mut ants: Query<(&mut Transform, &mut Creature)>,
+    food_heaps: Query<(&Transform, &Children), (With<FoodHeap>, Without<Creature>)>,
+    foods: Query<&GlobalTransform, (With<FoodPellet>, Without<Creature>, Without<FoodHeap>)>,
     time: Res<Time>,
     obstacle_map: Res<ObstacleMap>,
 ) {
+    let mut picked: HashSet<Entity> = HashSet::default();
     let max_speed = 0.25;
     let steer_strength = 2.0;
     for (mut transform, mut ant) in ants.iter_mut() {
+        let mut near = 10.0;
+        let mut target_heap = None;
+        for (food, children) in food_heaps.iter() {
+            let distance = food.translation.distance_squared(transform.translation);
+            if distance < near {
+                near = distance;
+                target_heap = Some(children);
+            }
+        }
+        if near < (1.0 / DEF * 5.0).powf(2.0) {
+            for food_entity in Deref::deref(target_heap.unwrap()) {
+                if picked.insert(*food_entity) {
+                    if let Ok(food) = foods.get(*food_entity) {
+                        commands.entity(*food_entity).despawn();
+                        ant.state = AntState::PickFood(food.translation, *food_entity);
+                        break;
+                    }
+                }
+            }
+        }
         ant.desired_direction = (ant.desired_direction
             - Quat::from_rotation_y(rand::thread_rng().gen_range(0.0..(2.0 * PI)))
                 .mul_vec3(Vec3::X)
