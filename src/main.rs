@@ -8,6 +8,7 @@ use bevy::{
 mod ant_hill;
 mod ants;
 mod camera;
+mod food;
 mod terrain_spawner;
 
 // struct RaycastCameraToGround;
@@ -36,6 +37,7 @@ fn main() {
         .add_plugin(terrain_spawner::TerrainSpawnerPlugin)
         .add_plugin(ants::AntsPlugin)
         .add_plugin(ant_hill::AntHillPlugin)
+        .add_plugin(food::FoodPlugin)
         // .init_resource::<CursorPosition>()
         // .add_system_to_stage(
         //     CoreStage::PreUpdate,
