@@ -1,7 +1,5 @@
 use bevy::prelude::*;
 
-use crate::terrain_spawner::ObstacleMap;
-
 pub struct AntHillPlugin;
 
 impl Plugin for AntHillPlugin {
