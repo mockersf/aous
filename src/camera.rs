@@ -10,8 +10,17 @@ pub struct CameraPlugin;
 impl Plugin for CameraPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_startup_system(setup);
+        #[cfg(target_arch = "wasm32")]
+        app.insert_resource(bevy::pbr2::PointLightShadowMap {
+            size: 2_usize.pow(11),
+        });
+        #[cfg(not(target_arch = "wasm32"))]
         app.insert_resource(bevy::pbr2::PointLightShadowMap {
             size: 2_usize.pow(12),
+        });
+        #[cfg(target_arch = "wasm32")]
+        app.insert_resource(bevy::pbr2::DirectionalLightShadowMap {
+            size: 2_usize.pow(1),
         });
         app.add_system(move_camera)
             .add_system(refresh_visible_lots)

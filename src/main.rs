@@ -1,8 +1,9 @@
 use bevy::{
-    diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
+    diagnostic::{EntityCountDiagnosticsPlugin, FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
     prelude::*,
     PipelinedDefaultPlugins,
 };
+use bevy_egui::EguiPlugin;
 // use bevy_mod_raycast::{DefaultRaycastingPlugin, RayCastMethod, RayCastSource, RaycastSystem};
 
 mod ant_hill;
@@ -10,16 +11,19 @@ mod ants;
 mod camera;
 mod food;
 mod terrain_spawner;
+mod ui;
 
 // struct RaycastCameraToGround;
 
-const BORDER: f32 = 3.0;
+const BORDER: f32 = 2.0;
 const DEF: f32 = 20.0;
 
 fn main() {
     App::new()
         .insert_resource(WindowDescriptor {
             title: "Ants Of Unusual Shape".to_string(),
+            #[cfg(target_arch = "wasm32")]
+            width: 1024.0,
             ..Default::default()
         })
         .insert_resource(bevy::log::LogSettings {
@@ -30,9 +34,12 @@ fn main() {
         .add_plugins(PipelinedDefaultPlugins)
         // .add_plugin(DefaultRaycastingPlugin::<RaycastCameraToGround>::default())
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
+        // .add_plugin(EntityCountDiagnosticsPlugin::default())
         .add_plugin(LogDiagnosticsPlugin::filtered(vec![
             FrameTimeDiagnosticsPlugin::FPS,
+            // EntityCountDiagnosticsPlugin::ENTITY_COUNT,
         ]))
+        .add_plugin(EguiPlugin)
         .add_plugin(camera::CameraPlugin)
         .add_plugin(terrain_spawner::TerrainSpawnerPlugin)
         .add_plugin(ants::AntsPlugin)
@@ -49,6 +56,7 @@ fn main() {
         //         .label(RaycastSystem::UpdateDebugCursor)
         //         .after(RaycastSystem::UpdateRaycast),
         // )
+        .add_plugin(ui::UiPlugin)
         .run();
 }
 

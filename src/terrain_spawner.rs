@@ -59,7 +59,8 @@ impl Plugin for TerrainSpawnerPlugin {
             moisture: rand::thread_rng().gen(),
         })
         .init_resource::<ObstacleMap>()
-        .add_system(fill_empty_lots);
+        .add_system(fill_empty_lots)
+        .add_system(cleanup_lots);
     }
 }
 
@@ -182,7 +183,7 @@ fn generate_lot(x: i32, z: i32, noise_seeds: &NoiseSeeds) -> Lot {
                     } else {
                         (
                             elevation,
-                            elevation / 25.0 + if elevation > 0.25 { 0.4 } else { 0.0 },
+                            elevation / 45.0 + if elevation > 0.6 { 0.4 } else { 0.0 },
                         )
                     }
                 }
@@ -339,4 +340,13 @@ fn vertices_as_mesh(vertices: Vec<Node>, details: u32) -> bevy::render2::mesh::M
     mesh.set_attribute(bevy::render2::mesh::Mesh::ATTRIBUTE_UV_0, uvs);
     mesh.set_indices(Some(bevy::render2::mesh::Indices::U32(indices)));
     mesh
+}
+
+fn cleanup_lots(
+    mut commands: Commands,
+    lots: Query<Entity, (Without<EmptyLot>, Without<Transform>, Without<Children>)>,
+) {
+    for entity in lots.iter() {
+        commands.entity(entity).despawn();
+    }
 }
