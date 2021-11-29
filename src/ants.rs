@@ -3,11 +3,11 @@ use std::{
     ops::Deref,
 };
 
-use bevy::{prelude::*, utils::HashSet};
+use bevy::{pbr2::NotShadowCaster, prelude::*, utils::HashSet};
 use rand::Rng;
 
 use crate::{
-    food::{FoodHeap, FoodPellet},
+    food::{FoodHandles, FoodHeap, FoodPellet},
     terrain_spawner::{EmptyLot, ObstacleMap},
     DEF,
 };
@@ -74,6 +74,12 @@ enum AntState {
     HasFood,
 }
 
+impl PartialEq for AntState {
+    fn eq(&self, other: &Self) -> bool {
+        core::mem::discriminant(self) == core::mem::discriminant(other)
+    }
+}
+
 #[derive(Component)]
 struct Creature {
     velocity: Vec3,
@@ -125,43 +131,112 @@ fn spawn_ant(
     }
 }
 
+#[derive(Component)]
+struct PickedFood;
+
 fn move_ants(
     mut commands: Commands,
-    mut ants: Query<(&mut Transform, &mut Creature)>,
+    mut ants: Query<(&mut Transform, &mut Creature, Entity, &Children)>,
     food_heaps: Query<(&Transform, &Children), (With<FoodHeap>, Without<Creature>)>,
-    foods: Query<&GlobalTransform, (With<FoodPellet>, Without<Creature>, Without<FoodHeap>)>,
+    mut foods: Query<(&GlobalTransform, &mut FoodPellet), (Without<Creature>, Without<FoodHeap>)>,
+    picked_foods: Query<Entity, With<PickedFood>>,
     time: Res<Time>,
     obstacle_map: Res<ObstacleMap>,
+    food_handles: Res<FoodHandles>,
 ) {
     let mut picked: HashSet<Entity> = HashSet::default();
     let max_speed = 0.25;
     let steer_strength = 2.0;
-    for (mut transform, mut ant) in ants.iter_mut() {
+    for (mut transform, mut ant, entity, children) in ants.iter_mut() {
         let mut near = 10.0;
         let mut target_heap = None;
-        for (food, children) in food_heaps.iter() {
-            let distance = food.translation.distance_squared(transform.translation);
-            if distance < near {
-                near = distance;
-                target_heap = Some(children);
-            }
-        }
-        if near < (1.0 / DEF * 5.0).powf(2.0) {
-            for food_entity in Deref::deref(target_heap.unwrap()) {
-                if picked.insert(*food_entity) {
-                    if let Ok(food) = foods.get(*food_entity) {
-                        commands.entity(*food_entity).despawn();
-                        ant.state = AntState::PickFood(food.translation, *food_entity);
-                        break;
+        // change state
+        {
+            match ant.state {
+                AntState::Wander => {
+                    // search for food nearby
+                    for (food_heap, children) in food_heaps.iter() {
+                        let distance = food_heap
+                            .translation
+                            .distance_squared(transform.translation);
+                        if distance < near {
+                            near = distance;
+                            target_heap = Some(children);
+                        }
+                    }
+                    if near < (1.0 / DEF * 5.0).powf(2.0) {
+                        for food_entity in Deref::deref(target_heap.unwrap()) {
+                            if picked.insert(*food_entity) {
+                                if let Ok((food, mut pellet)) = foods.get_mut(*food_entity) {
+                                    if !pellet.targeted {
+                                        pellet.targeted = true;
+                                        ant.state =
+                                            AntState::PickFood(food.translation, *food_entity);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
-            }
+                AntState::PickFood(target, food_entity) => {
+                    // pick food if close enough
+                    if transform.translation.distance_squared(target) < (1.0 / DEF).powf(2.0) {
+                        ant.state = AntState::HasFood;
+                        commands.entity(food_entity).despawn();
+                        commands.entity(entity).with_children(|ant| {
+                            ant.spawn_bundle(bevy::pbr2::PbrBundle {
+                                mesh: food_handles.mesh.clone_weak(),
+                                material: food_handles.color.clone_weak(),
+                                transform: Transform {
+                                    translation: Vec3::new(0.0, 0.01, 0.02),
+                                    scale: Vec3::splat(0.8),
+                                    rotation: Default::default(),
+                                },
+                                ..Default::default()
+                            })
+                            .insert_bundle((PickedFood, NotShadowCaster));
+                        });
+                    }
+                }
+                AntState::HasFood => {
+                    // drop food at home if close enough
+                    if transform.translation.distance_squared(Vec3::ZERO) < (1.0 / DEF).powf(2.0) {
+                        ant.state = AntState::Wander;
+                        for child in children.iter() {
+                            if picked_foods.get(*child).is_ok() {
+                                commands.entity(*child).despawn_recursive();
+                            }
+                        }
+                    }
+                }
+            };
         }
-        ant.desired_direction = (ant.desired_direction
-            - Quat::from_rotation_y(rand::thread_rng().gen_range(0.0..(2.0 * PI)))
-                .mul_vec3(Vec3::X)
-                * ant.wander_strength)
-            .normalize();
+        // find where we want to go
+        let moving_towards = match ant.state {
+            AntState::Wander => {
+                // TODO: look for pheromons
+                Quat::from_rotation_y(rand::thread_rng().gen_range(0.0..(2.0 * PI)))
+                    .mul_vec3(Vec3::X)
+                    * ant.wander_strength
+            }
+            AntState::PickFood(position, _) => {
+                (-position + transform.translation)
+                    + Quat::from_rotation_y(rand::thread_rng().gen_range(0.0..(2.0 * PI)))
+                        .mul_vec3(Vec3::X)
+                        * ant.wander_strength
+                        / 2.0
+            }
+            AntState::HasFood => {
+                // TODO: look for pheromons
+                transform.translation.normalize()
+                    + Quat::from_rotation_y(rand::thread_rng().gen_range(0.0..(2.0 * PI)))
+                        .mul_vec3(Vec3::X)
+                        * ant.wander_strength
+                        / 2.0
+            }
+        };
+        ant.desired_direction = (ant.desired_direction - moving_towards).normalize();
 
         let desired_velocity = ant.desired_direction * max_speed;
         let desired_steering_force = (desired_velocity - ant.velocity) * steer_strength;

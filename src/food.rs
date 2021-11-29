@@ -19,9 +19,9 @@ impl Plugin for FoodPlugin {
     }
 }
 
-struct FoodHandles {
-    mesh: Handle<bevy::render2::mesh::Mesh>,
-    color: Handle<bevy::pbr2::StandardMaterial>,
+pub struct FoodHandles {
+    pub mesh: Handle<bevy::render2::mesh::Mesh>,
+    pub color: Handle<bevy::pbr2::StandardMaterial>,
 }
 
 impl FromWorld for FoodHandles {
@@ -51,7 +51,9 @@ impl FromWorld for FoodHandles {
 }
 
 #[derive(Component)]
-pub struct FoodPellet;
+pub struct FoodPellet {
+    pub targeted: bool,
+}
 
 #[derive(Component)]
 pub struct FoodHeap;
@@ -86,7 +88,7 @@ fn spawn_food(
                         transform,
                         ..Default::default()
                     })
-                    .insert_bundle((FoodPellet, NotShadowCaster));
+                    .insert_bundle((FoodPellet { targeted: false }, NotShadowCaster));
                 }
             });
     }
