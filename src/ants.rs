@@ -1,6 +1,6 @@
 use std::{f32::consts::PI, ops::Deref};
 
-use bevy::{pbr2::NotShadowCaster, prelude::*, utils::HashSet};
+use bevy::prelude::*;
 use rand::Rng;
 
 use crate::{

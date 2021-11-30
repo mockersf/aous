@@ -12,7 +12,7 @@ use bevy_egui::{
     EguiContext,
 };
 
-use crate::{ant_hill::AntHill, ants::Creature, food::FoodPellet};
+use crate::{ant_hill::AntHill, ants::Creature};
 
 pub struct UiPlugin;
 

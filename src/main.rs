@@ -1,5 +1,9 @@
 use bevy::{
-    diagnostic::{EntityCountDiagnosticsPlugin, FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
+    diagnostic::{
+        // EntityCountDiagnosticsPlugin,
+        FrameTimeDiagnosticsPlugin,
+        LogDiagnosticsPlugin,
+    },
     prelude::*,
     PipelinedDefaultPlugins,
 };
