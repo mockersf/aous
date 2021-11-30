@@ -41,8 +41,9 @@ fn main() {
             level: bevy::log::Level::TRACE,
             filter: "wgpu=warn,bevy=info,winit=info,naga=info".to_string(),
         })
-        // .add_plugins(DefaultPlugins)
-        .add_plugins(PipelinedDefaultPlugins)
+        .add_plugins_with(PipelinedDefaultPlugins, |group| {
+            return group.add_before::<bevy::asset::AssetPlugin, _>(asset_io::InMemoryAssetPlugin);
+        })
         // .add_plugin(DefaultRaycastingPlugin::<RaycastCameraToGround>::default())
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
         // .add_plugin(EntityCountDiagnosticsPlugin::default())
