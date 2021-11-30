@@ -11,6 +11,12 @@ pub struct InMemoryAssetIo {
     loaded: std::collections::HashMap<&'static Path, &'static [u8]>,
 }
 
+impl Default for InMemoryAssetIo {
+    fn default() -> Self {
+        InMemoryAssetIo::new()
+    }
+}
+
 impl InMemoryAssetIo {
     pub fn new() -> Self {
         InMemoryAssetIo {

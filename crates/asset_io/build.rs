@@ -40,9 +40,7 @@ fn main() {
 
     file.write_all("}".as_ref()).unwrap();
 
-    let new_fingerprint = File::open(&dest_path)
-        .and_then(|file| sha256_digest(file))
-        .unwrap();
+    let new_fingerprint = File::open(&dest_path).and_then(sha256_digest).unwrap();
     let fingerprint_path = Path::new(&out_dir).join("asset_list_fingerprint");
     let old_fingerprint = fs::read(&fingerprint_path);
     if !old_fingerprint
