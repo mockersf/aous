@@ -27,15 +27,7 @@ pub struct UiPlugin;
 
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.insert_resource(Bonuses {
-            spawn_cost: 10,
-            spawn: 15,
-            improve_speed_cost: 5,
-            improve_speed: 0.002,
-            improve_life_cost: 5,
-            improve_life: 3.0,
-        })
-        .add_system_set(
+        app.add_system_set(
             SystemSet::on_update(GameState::Playing)
                 .with_system(overall_ui)
                 .with_system(update_graph_data.config(|(_, _, timer, _, _, _)| {
@@ -79,13 +71,25 @@ impl GraphData {
     }
 }
 
-struct Bonuses {
+pub struct Bonuses {
     spawn_cost: u32,
     spawn: u32,
     improve_speed_cost: u32,
     improve_speed: f32,
     improve_life_cost: u32,
     improve_life: f64,
+}
+impl Default for Bonuses {
+    fn default() -> Self {
+        Bonuses {
+            spawn_cost: 10,
+            spawn: 15,
+            improve_speed_cost: 5,
+            improve_speed: 0.002,
+            improve_life_cost: 5,
+            improve_life: 3.0,
+        }
+    }
 }
 
 fn update_graph_data(

@@ -10,7 +10,7 @@ use crate::{
     ant_hill::AntHill,
     camera::VisibleLots,
     food::{FoodDelay, FoodTimer},
-    ui::GraphData,
+    ui::{Bonuses, GraphData},
 };
 
 #[derive(Clone, Eq, PartialEq, Debug, Hash)]
@@ -62,6 +62,7 @@ fn restart_game(mut commands: Commands, time: Res<Time>) {
     let mut new_timer = Timer::new(duration, true);
     new_timer.set_elapsed(duration * 99 / 100);
     commands.insert_resource(FoodTimer(new_timer));
+    commands.insert_resource(Bonuses::default())
 }
 
 fn despawn_all(mut commands: Commands, all: Query<Entity>) {
