@@ -6,6 +6,7 @@ use rand::Rng;
 use crate::{
     ant_hill::HillEvents,
     food::{FoodHeap, FoodPellet},
+    game_state::GameState,
     terrain_spawner::{EmptyLot, ObstacleMap},
     DEF,
 };
@@ -15,8 +16,11 @@ pub struct AntsPlugin;
 impl Plugin for AntsPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.init_resource::<AntHandles>()
-            .add_system(update_ant_state)
-            .add_system(move_ants)
+            .add_system_set(
+                SystemSet::on_update(GameState::Playing)
+                    .with_system(update_ant_state)
+                    .with_system(move_ants),
+            )
             .add_system_to_stage(CoreStage::PostUpdate, aging_ants);
     }
 }
@@ -124,7 +128,7 @@ fn update_ant_state(
                         target_heap = Some(children);
                     }
                 }
-                if near < (1.0 / DEF * 5.0).powf(2.0) {
+                if near < (1.0 / DEF * 8.0).powf(2.0) {
                     for food_entity in Deref::deref(target_heap.unwrap()) {
                         if let Ok((food, mut pellet)) = foods.get_mut(*food_entity) {
                             if !pellet.targeted {
@@ -140,18 +144,22 @@ fn update_ant_state(
                 // pick food if close enough
                 if transform.translation.distance_squared(target) < (1.0 / DEF).powf(2.0) {
                     ant.state = AntState::HasFood;
-                    commands
-                        .entity(food_entity)
-                        .insert_bundle((
-                            Parent(entity),
-                            Transform {
-                                translation: Vec3::new(0.0, 0.01, 0.02),
-                                scale: Vec3::splat(0.8),
-                                rotation: Default::default(),
-                            },
-                            PickedFood,
-                        ))
-                        .remove::<FoodPellet>();
+                    if foods.get_mut(food_entity).is_ok() {
+                        commands
+                            .entity(food_entity)
+                            .insert_bundle((
+                                Parent(entity),
+                                Transform {
+                                    translation: Vec3::new(0.0, 0.01, 0.02),
+                                    scale: Vec3::splat(0.8),
+                                    rotation: Default::default(),
+                                },
+                                PickedFood,
+                            ))
+                            .remove::<FoodPellet>();
+                    } else {
+                        ant.state = AntState::Wander;
+                    }
                 }
             }
             AntState::HasFood => {
@@ -243,7 +251,9 @@ fn aging_ants(
         // if ant.state == AntState::Wander || ant.state == AntState::HasFood {
         if time.seconds_since_startup() - ant.birth > ant.gene.life_expectancy {
             if let AntState::PickFood(_, food_entity) = ant.state {
-                foods.get_mut(food_entity).unwrap().targeted = false;
+                if let Ok(mut food_pellet) = foods.get_mut(food_entity) {
+                    food_pellet.targeted = false;
+                }
             }
             commands.entity(entity).despawn_recursive();
         }

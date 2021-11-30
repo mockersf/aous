@@ -3,13 +3,14 @@ use std::collections::hash_map::Entry;
 use bevy::{prelude::*, utils::HashMap};
 // use bevy_mod_raycast::RayCastSource;
 
-use crate::{terrain_spawner::EmptyLot, BORDER};
+use crate::{game_state::GameState, terrain_spawner::EmptyLot, BORDER};
 
 pub struct CameraPlugin;
 
 impl Plugin for CameraPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_startup_system(setup);
+        app.add_system_set(SystemSet::on_enter(GameState::Playing).with_system(setup));
+
         #[cfg(target_arch = "wasm32")]
         app.insert_resource(bevy::pbr2::PointLightShadowMap {
             size: 2_usize.pow(11),
@@ -22,9 +23,12 @@ impl Plugin for CameraPlugin {
         app.insert_resource(bevy::pbr2::DirectionalLightShadowMap {
             size: 2_usize.pow(1),
         });
-        app.add_system(move_camera)
-            .add_system(refresh_visible_lots)
-            .add_system(rotator);
+        app.add_system_set(
+            SystemSet::on_update(GameState::Playing)
+                .with_system(move_camera)
+                .with_system(refresh_visible_lots)
+                .with_system(rotator),
+        );
     }
 }
 
@@ -60,11 +64,14 @@ fn setup(mut commands: Commands) {
         });
 }
 
+#[derive(Default)]
+pub struct VisibleLots(HashMap<IVec2, Entity>);
+
 fn refresh_visible_lots(
     mut commands: Commands,
     windows: Res<Windows>,
     camera: Query<(&bevy::render2::camera::Camera, &GlobalTransform)>,
-    mut visible_lots: Local<HashMap<IVec2, Entity>>,
+    mut visible_lots: ResMut<VisibleLots>,
 ) {
     let window_width = windows.get_primary().unwrap().width();
     let window_heigth = windows.get_primary().unwrap().height();
@@ -89,6 +96,7 @@ fn refresh_visible_lots(
     let (camera, gt) = camera.single();
 
     let mut updated_lots: HashMap<IVec2, Entity> = visible_lots
+        .0
         .drain()
         .filter(|(position, entity)| {
             if let Some(screen_position) = camera.world_to_screen(
@@ -133,7 +141,7 @@ fn refresh_visible_lots(
         }
     }
 
-    *visible_lots = updated_lots;
+    visible_lots.0 = updated_lots;
 }
 
 // Marker for a light to rotate

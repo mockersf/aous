@@ -1,11 +1,14 @@
 use std::collections::hash_map::Entry;
 
-use bevy::{ecs::component::SparseStorage, math::const_vec3, prelude::*, utils::HashMap};
+use bevy::{
+    ecs::component::SparseStorage, math::const_vec3, pbr2::NotShadowCaster, prelude::*,
+    utils::HashMap,
+};
 // use bevy_mod_raycast::{BoundVol, RayCastMesh};
 use bracket_noise::prelude::{FastNoise, FractalType, NoiseType};
 use rand::Rng;
 
-use crate::{BORDER, DEF};
+use crate::{game_state::GameState, BORDER, DEF};
 
 #[derive(Debug)]
 pub struct EmptyLot {
@@ -59,8 +62,11 @@ impl Plugin for TerrainSpawnerPlugin {
             moisture: rand::thread_rng().gen(),
         })
         .init_resource::<ObstacleMap>()
-        .add_system(fill_empty_lots)
-        .add_system(cleanup_lots);
+        .add_system_set(
+            SystemSet::on_update(GameState::Playing)
+                .with_system(fill_empty_lots)
+                .with_system(cleanup_lots),
+        );
     }
 }
 
@@ -114,7 +120,8 @@ fn fill_empty_lots(
                         mesh: mesh.mesh.clone_weak(),
                         material: mesh.color.clone_weak(),
                         ..Default::default()
-                    });
+                    })
+                    .insert(NotShadowCaster);
                     // .insert_bundle((
                     //     BoundVol { sphere: None },
                     //     RayCastMesh::<crate::RaycastCameraToGround>::default(),

@@ -3,7 +3,10 @@ use std::{collections::VecDeque, f32::consts::FRAC_PI_2, time::Duration};
 use bevy::prelude::*;
 use rand::Rng;
 
-use crate::ants::{AntHandles, AntState, Creature, CreatureGene};
+use crate::{
+    ants::{AntHandles, AntState, Creature, CreatureGene},
+    game_state::GameState,
+};
 
 pub struct AntHillPlugin;
 
@@ -11,22 +14,15 @@ impl Plugin for AntHillPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<AntHillHandles>()
             .add_event::<HillEvents>()
-            .add_startup_system(spawn_ant_hill)
-            .insert_resource(AntHill {
-                food: 50,
-                queen_food: 2,
-                gene: CreatureGene {
-                    life_expectancy: 30.0,
-                    max_speed: 0.25,
-                    wander_strength: 0.1,
-                },
-                gatherer_genes: VecDeque::new(),
-            })
+            .add_system_set(SystemSet::on_enter(GameState::Playing).with_system(spawn_ant_hill))
             .insert_resource(EvolveTimer(Timer::new(Duration::from_secs_f32(30.0), true)))
-            .add_system(hill_events)
-            .add_system(use_food)
-            .add_system(spawn_ant)
-            .add_system(evolve_hills);
+            .add_system_set(
+                SystemSet::on_update(GameState::Playing)
+                    .with_system(hill_events)
+                    .with_system(use_food)
+                    .with_system(spawn_ant)
+                    .with_system(evolve_hills),
+            );
     }
 }
 
@@ -42,7 +38,7 @@ impl FromWorld for AntHillHandles {
             .unwrap();
         let mesh = meshes.add(bevy::render2::mesh::Mesh::from(
             bevy::render2::mesh::shape::Icosphere {
-                radius: 0.1,
+                radius: 0.15,
                 ..Default::default()
             },
         ));
@@ -68,6 +64,21 @@ pub struct AntHill {
     pub gatherer_genes: VecDeque<CreatureGene>,
 }
 
+impl Default for AntHill {
+    fn default() -> Self {
+        AntHill {
+            food: 50,
+            queen_food: 2,
+            gene: CreatureGene {
+                life_expectancy: 30.0,
+                max_speed: 0.25,
+                wander_strength: 0.1,
+            },
+            gatherer_genes: VecDeque::new(),
+        }
+    }
+}
+
 fn spawn_ant_hill(mut commands: Commands, ant_hill_handles: Res<AntHillHandles>) {
     commands.spawn_bundle(bevy::pbr2::PbrBundle {
         mesh: ant_hill_handles.mesh.clone_weak(),
@@ -83,6 +94,7 @@ pub enum HillEvents {
     RemoveQueenFood(u32),
     ImproveMaxSpeed(f32),
     ImproveLifeExpectancy(f64),
+    ReplenishFood(u32, f64),
 }
 
 fn use_food(mut hill: ResMut<AntHill>, mut events: EventWriter<HillEvents>) {
@@ -176,6 +188,15 @@ fn hill_events(
             HillEvents::RemoveQueenFood(consumed) => hill.queen_food -= consumed,
             HillEvents::ImproveMaxSpeed(boost) => hill.gene.max_speed += boost,
             HillEvents::ImproveLifeExpectancy(boost) => hill.gene.life_expectancy += boost,
+            HillEvents::ReplenishFood(count, ratio) => {
+                for _ in 0..*count {
+                    if rand::thread_rng().gen_bool(*ratio) {
+                        hill.queen_food += 1;
+                    } else {
+                        hill.food += 1;
+                    }
+                }
+            }
         }
     }
 }

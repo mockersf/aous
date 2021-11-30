@@ -11,6 +11,7 @@ bevy = { git = "https://github.com/bevyengine/bevy", branch = "main", default-fe
   "bevy_pbr2",
   "bevy_winit",
   "x11",
+  "png",
 ] }
 bracket-noise = "0.8"
 # bevy_mod_raycast = { git = "https://github.com/aevyrie/bevy_mod_raycast" }

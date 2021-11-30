@@ -1,3 +1,5 @@
+// disable console opening on windows
+#![windows_subsystem = "windows"]
 #![allow(clippy::type_complexity)]
 
 use bevy::{
@@ -12,10 +14,13 @@ use bevy::{
 use bevy_egui::EguiPlugin;
 // use bevy_mod_raycast::{DefaultRaycastingPlugin, RayCastMethod, RayCastSource, RaycastSystem};
 
+mod ant_eaters;
 mod ant_hill;
 mod ants;
 mod camera;
 mod food;
+mod game_state;
+mod splash;
 mod terrain_spawner;
 mod ui;
 
@@ -46,11 +51,14 @@ fn main() {
             // EntityCountDiagnosticsPlugin::ENTITY_COUNT,
         ]))
         .add_plugin(EguiPlugin)
+        .add_plugin(game_state::GameStatePlugin)
+        .add_plugin(splash::SplashPlugin)
         .add_plugin(camera::CameraPlugin)
         .add_plugin(terrain_spawner::TerrainSpawnerPlugin)
         .add_plugin(ants::AntsPlugin)
         .add_plugin(ant_hill::AntHillPlugin)
         .add_plugin(food::FoodPlugin)
+        .add_plugin(ant_eaters::AntEatersPlugin)
         // .init_resource::<CursorPosition>()
         // .add_system_to_stage(
         //     CoreStage::PreUpdate,
