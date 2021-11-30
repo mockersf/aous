@@ -79,9 +79,11 @@ struct HandledLot {
 fn fill_empty_lots(
     mut commands: Commands,
     lots: Query<(Entity, &EmptyLot)>,
-    mut meshes: ResMut<Assets<bevy::render2::mesh::Mesh>>,
-    mut textures: ResMut<Assets<bevy::render2::texture::Image>>,
-    mut materials: ResMut<Assets<bevy::pbr2::StandardMaterial>>,
+    (mut meshes, mut textures, mut materials): (
+        ResMut<Assets<bevy::render2::mesh::Mesh>>,
+        ResMut<Assets<bevy::render2::texture::Image>>,
+        ResMut<Assets<bevy::pbr2::StandardMaterial>>,
+    ),
     mut mesh_cache: Local<HashMap<IVec2, HandledLot>>,
     mut obstacle_map: ResMut<ObstacleMap>,
     noise_seeds: Res<NoiseSeeds>,

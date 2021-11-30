@@ -77,8 +77,7 @@ fn spawn_food(
             WorldEvents::SpawnFood => {
                 let (x, z) = iter::repeat(())
                     .map(|_| (rn.gen_range(-BORDER..BORDER), rn.gen_range(-BORDER..BORDER)))
-                    .filter(|(x, z)| !obstacle_map.is_obstacle(*x, *z, 0.0))
-                    .next()
+                    .find(|(x, z)| !obstacle_map.is_obstacle(*x, *z, 0.0))
                     .unwrap();
                 commands
                     .spawn_bundle((
