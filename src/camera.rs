@@ -40,8 +40,8 @@ fn setup(mut commands: Commands) {
         ))
         .with_children(|camera_placer| {
             camera_placer.spawn_bundle(bevy::render2::camera::PerspectiveCameraBundle {
-                transform: Transform::from_xyz(0.4, 4.3, -1.5)
-                    .looking_at(Vec3::new(0.4, 0.0, 0.0), Vec3::Y),
+                transform: Transform::from_xyz(0.45, 4.3, -1.5)
+                    .looking_at(Vec3::new(0.45, 0.0, -0.2), Vec3::Y),
                 ..Default::default()
             });
             // .insert(RayCastSource::<crate::RaycastCameraToGround>::new_transform_empty());
