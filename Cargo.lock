@@ -90,6 +90,7 @@ dependencies = [
  "asset_io",
  "bevy",
  "bevy_egui",
+ "bevy_render2",
  "bracket-noise",
  "config",
  "rand",
@@ -183,12 +184,6 @@ source = "git+https://github.com/bevyengine/bevy?branch=main#d59a3ddd61d01b42656
 dependencies = [
  "bevy_internal",
 ]
-
-[[package]]
-name = "bevy-glsl-to-spirv"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0d5f2f58f0aec3c50a20799792c3705e80dd7df327e79791cacec197e84e5e61"
 
 [[package]]
 name = "bevy_app"
@@ -350,7 +345,6 @@ dependencies = [
  "bevy_math",
  "bevy_pbr2",
  "bevy_reflect",
- "bevy_render",
  "bevy_render2",
  "bevy_scene",
  "bevy_sprite2",
@@ -443,36 +437,6 @@ dependencies = [
  "quote",
  "syn",
  "uuid",
-]
-
-[[package]]
-name = "bevy_render"
-version = "0.5.0"
-source = "git+https://github.com/bevyengine/bevy?branch=main#d59a3ddd61d01b426568073a3590074730578d5d"
-dependencies = [
- "anyhow",
- "bevy-glsl-to-spirv",
- "bevy_app",
- "bevy_asset",
- "bevy_core",
- "bevy_derive",
- "bevy_ecs",
- "bevy_math",
- "bevy_reflect",
- "bevy_transform",
- "bevy_utils",
- "bevy_window",
- "bitflags",
- "downcast-rs",
- "hex",
- "hexasphere",
- "image",
- "once_cell",
- "parking_lot",
- "serde",
- "shaderc",
- "spirv-reflect",
- "thiserror",
 ]
 
 [[package]]
@@ -760,15 +724,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e3a093d6fed558e5fe24c3dfc85a68bb68f1c824f440d3ba5aca189e2998786b"
 dependencies = [
  "winapi",
-]
-
-[[package]]
-name = "cmake"
-version = "0.1.46"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b7b858541263efe664aead4a5209a4ae5c5d2811167d4ed4ee0944503f8d2089"
-dependencies = [
- "cc",
 ]
 
 [[package]]
@@ -2259,26 +2214,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "shaderc"
-version = "0.7.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "58da8aaf4ad3508598cdf098567114c98d5f455de7d69b1213232ac557bc67ea"
-dependencies = [
- "libc",
- "shaderc-sys",
-]
-
-[[package]]
-name = "shaderc-sys"
-version = "0.7.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8bd76ec0bd25f2017a65250373485e43cdc81b5cb8fd83c6115375c8d018cdf9"
-dependencies = [
- "cmake",
- "libc",
-]
-
-[[package]]
 name = "sharded-slab"
 version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2322,30 +2257,6 @@ name = "spirv"
 version = "0.2.0+1.5.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "246bfa38fe3db3f1dfc8ca5a2cdeb7348c78be2112740cc0ec8ef18b6d94f830"
-dependencies = [
- "bitflags",
- "num-traits",
-]
-
-[[package]]
-name = "spirv-reflect"
-version = "0.2.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cecc7af6a7d3ca6d15f4d6b5077df89c77ad1f4b314d0cabee221656d041dad7"
-dependencies = [
- "bitflags",
- "cc",
- "num-traits",
- "serde",
- "serde_derive",
- "spirv_headers",
-]
-
-[[package]]
-name = "spirv_headers"
-version = "1.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1f5b132530b1ac069df335577e3581765995cba5a13995cdbbdbc8fb057c532c"
 dependencies = [
  "bitflags",
  "num-traits",
