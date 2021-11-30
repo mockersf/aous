@@ -20,7 +20,8 @@ impl Plugin for AntHillPlugin {
                 SystemSet::on_update(GameState::Playing)
                     .with_system(hill_events)
                     .with_system(use_food)
-                    .with_system(spawn_ant)
+                    // used for debugging
+                    // .with_system(spawn_ant)
                     .with_system(evolve_hills),
             );
     }
@@ -104,6 +105,7 @@ fn use_food(mut hill: ResMut<AntHill>, mut events: EventWriter<HillEvents>) {
     }
 }
 
+#[allow(dead_code)]
 fn spawn_ant(keyboard_input: Res<Input<KeyCode>>, mut events: EventWriter<HillEvents>) {
     if keyboard_input.pressed(KeyCode::Space) {
         events.send(HillEvents::SpawnAnts { count: 1 });
