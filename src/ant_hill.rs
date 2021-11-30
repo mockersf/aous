@@ -22,12 +22,11 @@ impl Plugin for AntHillPlugin {
                 },
                 gatherer_genes: VecDeque::new(),
             })
+            .insert_resource(EvolveTimer(Timer::new(Duration::from_secs_f32(30.0), true)))
             .add_system(hill_events)
             .add_system(use_food)
             .add_system(spawn_ant)
-            .add_system(evolve_hills.config(|(_, _, timer)| {
-                *timer = Some(Timer::new(Duration::from_secs_f32(30.0), true));
-            }));
+            .add_system(evolve_hills);
     }
 }
 
@@ -187,8 +186,10 @@ mod mutations {
     pub const LIFE_EXPECTANCY: f64 = 10.0;
 }
 
-fn evolve_hills(mut hill: ResMut<AntHill>, time: Res<Time>, mut timer: Local<Timer>) {
-    if timer.tick(time.delta()).just_finished() {
+pub struct EvolveTimer(pub Timer);
+
+fn evolve_hills(mut hill: ResMut<AntHill>, time: Res<Time>, mut timer: ResMut<EvolveTimer>) {
+    if timer.0.tick(time.delta()).just_finished() {
         let mean_gene =
             hill.gatherer_genes
                 .iter()

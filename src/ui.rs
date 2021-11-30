@@ -18,7 +18,7 @@ use bevy_egui::{
 const HISTORY_SIZE: usize = 240;
 
 use crate::{
-    ant_hill::{AntHill, HillEvents},
+    ant_hill::{AntHill, EvolveTimer, HillEvents},
     ants::Creature,
 };
 
@@ -99,6 +99,7 @@ fn overall_ui(
     data: Res<GraphData>,
     mut costs: ResMut<Costs>,
     mut events: EventWriter<HillEvents>,
+    evolve_timer: Res<EvolveTimer>,
 ) {
     egui::SidePanel::left("left-panel").show(egui_context.ctx(), |ui| {
         ui.label("");
@@ -143,6 +144,7 @@ fn overall_ui(
                     ui.label(format!("{:.2}", data.genome_expectancy));
                     ui.end_row();
                 });
+            ui.add(ProgressBar::new(evolve_timer.0.percent()).text("Mutate"));
         });
         ui.label("");
         ui.group(|ui| {
