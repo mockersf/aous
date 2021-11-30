@@ -5,8 +5,8 @@ use rand::Rng;
 
 use crate::{
     ant_hill::HillEvents,
-    ants::Creature,
-    food::{FoodPellet, WorldEvents},
+    ants::{AntState, Creature},
+    food::{FoodHeap, FoodPellet, WorldEvents},
     game_state::GameState,
     terrain_spawner::{EmptyLot, ObstacleMap},
     DEF,
@@ -221,15 +221,21 @@ fn anteaters_consume_food(
 fn anteaters_consume_ants(
     mut commands: Commands,
     mut anteaters: Query<(&Transform, &mut AntEater)>,
-    ants: Query<(Entity, &Transform), With<Creature>>,
+    ants: Query<(Entity, &Transform, &Creature)>,
+    mut foods: Query<&mut FoodPellet, (Without<Creature>, Without<FoodHeap>)>,
 ) {
     for (transform, mut anteater) in anteaters.iter_mut() {
-        for (ant_entity, ant_transform) in ants.iter() {
+        for (ant_entity, ant_transform, ant) in ants.iter() {
             if transform
                 .translation
                 .distance_squared(ant_transform.translation)
                 < 0.025
             {
+                if let AntState::PickFood(_, food_entity) = ant.state {
+                    if let Ok(mut food_pellet) = foods.get_mut(food_entity) {
+                        food_pellet.targeted = false;
+                    }
+                }
                 commands.entity(ant_entity).despawn_recursive();
                 anteater.ant_killed += 1;
             }
