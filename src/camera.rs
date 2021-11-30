@@ -47,7 +47,7 @@ fn setup(mut commands: Commands) {
             // .insert(RayCastSource::<crate::RaycastCameraToGround>::new_transform_empty());
             camera_placer
                 .spawn_bundle(bevy::pbr2::PointLightBundle {
-                    transform: Transform::from_xyz(-10.0, 8.0, 0.0),
+                    transform: Transform::from_xyz(-10.0, 3.0, 0.0),
                     point_light: bevy::pbr2::PointLight {
                         intensity: 1600.0,
                         range: 100.0,
