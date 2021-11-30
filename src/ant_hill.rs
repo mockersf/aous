@@ -183,43 +183,25 @@ mod mutations {
 
 fn evolve_hills(mut hill: ResMut<AntHill>, time: Res<Time>, mut timer: Local<Timer>) {
     if timer.tick(time.delta()).just_finished() {
-        let mut rn = rand::thread_rng();
-        let mean_gene = hill.gatherer_genes.iter().fold(
-            (
-                CreatureGene {
-                    life_expectancy: 0.0,
-                    max_speed: 0.0,
-                    wander_strength: 0.0,
-                },
-                0,
-            ),
-            |(current, count), gene| {
-                (
-                    CreatureGene {
-                        life_expectancy: (current.life_expectancy * count as f64
-                            + gene.life_expectancy)
-                            / (count + 1) as f64,
-                        max_speed: (current.max_speed * count as f32 + gene.max_speed)
-                            / (count + 1) as f32,
-                        wander_strength: (current.wander_strength * count as f32
-                            + gene.wander_strength)
-                            / (count + 1) as f32,
-                    },
-                    count + 1,
-                )
-            },
-        );
-        hill.gene = CreatureGene {
-            life_expectancy: (mean_gene.0.life_expectancy
-                + rn.gen_range(-mutations::LIFE_EXPECTANCY..mutations::LIFE_EXPECTANCY))
-            .max(15.0),
-            max_speed: (mean_gene.0.max_speed
-                + rn.gen_range(-mutations::MAX_SPEED..mutations::MAX_SPEED))
-            .max(0.05),
-            wander_strength: (mean_gene.0.wander_strength
-                + rn.gen_range(-mutations::WANDER_STRENGTH..mutations::WANDER_STRENGTH))
-            .max(0.05),
-        };
+        let mean_gene =
+            hill.gatherer_genes
+                .iter()
+                .fold((hill.gene, 1), |(current, count), gene| {
+                    (
+                        CreatureGene {
+                            life_expectancy: (current.life_expectancy * count as f64
+                                + gene.life_expectancy)
+                                / (count + 1) as f64,
+                            max_speed: (current.max_speed * count as f32 + gene.max_speed)
+                                / (count + 1) as f32,
+                            wander_strength: (current.wander_strength * count as f32
+                                + gene.wander_strength)
+                                / (count + 1) as f32,
+                        },
+                        count + 1,
+                    )
+                });
+        hill.gene = mean_gene.0;
         info!("current gene: {:?}", hill.gene);
     }
 }
