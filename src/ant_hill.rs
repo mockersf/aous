@@ -81,6 +81,9 @@ fn spawn_ant_hill(mut commands: Commands, ant_hill_handles: Res<AntHillHandles>)
 pub enum HillEvents {
     SpawnAnts { count: u32 },
     StoreFood(u32, CreatureGene),
+    RemoveQueenFood(u32),
+    ImproveMaxSpeed(f32),
+    ImproveLifeExpectancy(f64),
 }
 
 fn use_food(mut hill: ResMut<AntHill>, mut events: EventWriter<HillEvents>) {
@@ -171,6 +174,9 @@ fn hill_events(
                     hill.gatherer_genes.pop_front();
                 }
             }
+            HillEvents::RemoveQueenFood(consumed) => hill.queen_food -= consumed,
+            HillEvents::ImproveMaxSpeed(boost) => hill.gene.max_speed += boost,
+            HillEvents::ImproveLifeExpectancy(boost) => hill.gene.life_expectancy += boost,
         }
     }
 }

@@ -2,7 +2,9 @@ use std::{collections::VecDeque, time::Duration};
 
 use bevy::{
     core::{Time, Timer},
-    prelude::{debug, ConfigurableSystem, FromWorld, Local, Plugin, Query, Res, ResMut},
+    prelude::{
+        debug, ConfigurableSystem, EventWriter, FromWorld, Local, Plugin, Query, Res, ResMut,
+    },
 };
 use bevy_egui::{
     egui::{
@@ -15,7 +17,10 @@ use bevy_egui::{
 
 const HISTORY_SIZE: usize = 240;
 
-use crate::{ant_hill::AntHill, ants::Creature};
+use crate::{
+    ant_hill::{AntHill, HillEvents},
+    ants::Creature,
+};
 
 pub struct UiPlugin;
 
@@ -82,14 +87,19 @@ fn update_graph_data(
         if data.nb_ants.len() > HISTORY_SIZE {
             data.nb_ants.pop_front();
         }
-        data.queen_food = anthill.queen_food;
-        data.genome_speed = anthill.gene.max_speed;
-        data.genome_expectancy = anthill.gene.life_expectancy;
-        data.food = anthill.food;
     }
+    data.queen_food = anthill.queen_food;
+    data.genome_speed = anthill.gene.max_speed;
+    data.genome_expectancy = anthill.gene.life_expectancy;
+    data.food = anthill.food;
 }
 
-fn overall_ui(egui_context: ResMut<EguiContext>, data: Res<GraphData>, costs: Res<Costs>) {
+fn overall_ui(
+    egui_context: ResMut<EguiContext>,
+    data: Res<GraphData>,
+    mut costs: ResMut<Costs>,
+    mut events: EventWriter<HillEvents>,
+) {
     egui::SidePanel::left("left-panel").show(egui_context.ctx(), |ui| {
         ui.label("");
         ui.group(|ui| {
@@ -151,6 +161,8 @@ fn overall_ui(egui_context: ResMut<EguiContext>, data: Res<GraphData>, costs: Re
                         ui.add(Button::new("Spawn 12 ants").enabled(false));
                     } else if ui.button("Spawn 12 ants").clicked() {
                         debug!("spawn ants!");
+                        events.send(HillEvents::SpawnAnts { count: 12 });
+                        events.send(HillEvents::RemoveQueenFood(costs.spawn));
                     }
                     ui.label(format!("{}", costs.spawn));
                     ui.end_row();
@@ -158,6 +170,9 @@ fn overall_ui(egui_context: ResMut<EguiContext>, data: Res<GraphData>, costs: Re
                         ui.add(Button::new("Improve speed").enabled(false));
                     } else if ui.button("Improve speed").clicked() {
                         debug!("Improve speed!");
+                        events.send(HillEvents::ImproveMaxSpeed(0.01));
+                        events.send(HillEvents::RemoveQueenFood(costs.improve_speed));
+                        costs.improve_speed += 5;
                     }
                     ui.label(format!("{}", costs.improve_speed));
                     ui.end_row();
@@ -165,6 +180,9 @@ fn overall_ui(egui_context: ResMut<EguiContext>, data: Res<GraphData>, costs: Re
                         ui.add(Button::new("Improve life expectancy").enabled(false));
                     } else if ui.button("Improve life expectancy").clicked() {
                         debug!("Improve life expectancy!");
+                        events.send(HillEvents::ImproveLifeExpectancy(5.0));
+                        events.send(HillEvents::RemoveQueenFood(costs.improve_life));
+                        costs.improve_life += 5;
                     }
                     ui.label(format!("{}", costs.improve_life));
                     ui.end_row();
