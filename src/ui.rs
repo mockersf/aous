@@ -39,7 +39,7 @@ impl Plugin for UiPlugin {
 
 struct GraphData {
     nb_ants: VecDeque<u32>,
-    queen_food: VecDeque<u32>,
+    queen_food: u32,
     food: u32,
     genome_speed: f32,
     genome_expectancy: f64,
@@ -48,8 +48,7 @@ impl FromWorld for GraphData {
     fn from_world(world: &mut bevy::prelude::World) -> Self {
         let mut nb_ants = VecDeque::new();
         nb_ants.extend([0; HISTORY_SIZE]);
-        let mut queen_food = VecDeque::new();
-        queen_food.extend([0; HISTORY_SIZE]);
+        let queen_food = 0;
         let anthill = world.get_resource::<AntHill>().unwrap();
         let genome_speed = anthill.gene.max_speed;
         let genome_expectancy = anthill.gene.life_expectancy;
@@ -83,10 +82,7 @@ fn update_graph_data(
         if data.nb_ants.len() > HISTORY_SIZE {
             data.nb_ants.pop_front();
         }
-        data.queen_food.push_back(anthill.queen_food);
-        if data.queen_food.len() > HISTORY_SIZE {
-            data.queen_food.pop_front();
-        }
+        data.queen_food = anthill.queen_food;
         data.genome_speed = anthill.gene.max_speed;
         data.genome_expectancy = anthill.gene.life_expectancy;
         data.food = anthill.food;
@@ -140,31 +136,6 @@ fn overall_ui(egui_context: ResMut<EguiContext>, data: Res<GraphData>, costs: Re
         });
         ui.label("");
         ui.group(|ui| {
-            egui::Grid::new("Ants_grid")
-                .num_columns(2)
-                .spacing([100.0, 0.0])
-                .striped(false)
-                .show(ui, |ui| {
-                    ui.label("Queen Food Storage");
-                    ui.label(format!("{}", data.queen_food.back().unwrap_or(&0)));
-                    ui.end_row();
-                });
-            ui.add(
-                Plot::new("queen food store")
-                    .height(100.0)
-                    .allow_zoom(false)
-                    .allow_drag(false)
-                    .show_axes([false, true])
-                    .line(Line::new(Values::from_values_iter(
-                        data.queen_food
-                            .iter()
-                            .enumerate()
-                            .map(|(i, c)| Value::new(i as f64, (*c) as f32)),
-                    ))),
-            );
-        });
-        ui.label("");
-        ui.group(|ui| {
             ui.label("Actions");
             ui.separator();
             egui::Grid::new("actions_grid")
@@ -173,30 +144,27 @@ fn overall_ui(egui_context: ResMut<EguiContext>, data: Res<GraphData>, costs: Re
                 .striped(false)
                 .min_row_height(25.0)
                 .show(ui, |ui| {
-                    if data.queen_food.back().unwrap() < &costs.spawn {
+                    ui.label("Available");
+                    ui.label(format!("{}", data.queen_food));
+                    ui.end_row();
+                    if data.queen_food < costs.spawn {
                         ui.add(Button::new("Spawn 12 ants").enabled(false));
-                    } else {
-                        if ui.button("Spawn 12 ants").clicked() {
-                            debug!("spawn ants!");
-                        }
+                    } else if ui.button("Spawn 12 ants").clicked() {
+                        debug!("spawn ants!");
                     }
                     ui.label(format!("{}", costs.spawn));
                     ui.end_row();
-                    if data.queen_food.back().unwrap() < &costs.improve_speed {
+                    if data.queen_food < costs.improve_speed {
                         ui.add(Button::new("Improve speed").enabled(false));
-                    } else {
-                        if ui.button("Improve speed").clicked() {
-                            debug!("Improve speed!");
-                        }
+                    } else if ui.button("Improve speed").clicked() {
+                        debug!("Improve speed!");
                     }
                     ui.label(format!("{}", costs.improve_speed));
                     ui.end_row();
-                    if data.queen_food.back().unwrap() < &costs.improve_life {
+                    if data.queen_food < costs.improve_life {
                         ui.add(Button::new("Improve life expectancy").enabled(false));
-                    } else {
-                        if ui.button("Improve life expectancy").clicked() {
-                            debug!("Improve life expectancy!");
-                        }
+                    } else if ui.button("Improve life expectancy").clicked() {
+                        debug!("Improve life expectancy!");
                     }
                     ui.label(format!("{}", costs.improve_life));
                     ui.end_row();
