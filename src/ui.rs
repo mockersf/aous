@@ -27,10 +27,13 @@ pub struct UiPlugin;
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.init_resource::<GraphData>()
-            .insert_resource(Costs {
-                spawn: 10,
-                improve_speed: 5,
-                improve_life: 5,
+            .insert_resource(Bonuses {
+                spawn_cost: 10,
+                spawn: 15,
+                improve_speed_cost: 5,
+                improve_speed: 0.002,
+                improve_life_cost: 5,
+                improve_life: 3.0,
             })
             .add_system(overall_ui)
             .add_system(update_graph_data.config(|(_, _, timer, _, _)| {
@@ -68,10 +71,13 @@ impl FromWorld for GraphData {
     }
 }
 
-struct Costs {
+struct Bonuses {
+    spawn_cost: u32,
     spawn: u32,
-    improve_speed: u32,
-    improve_life: u32,
+    improve_speed_cost: u32,
+    improve_speed: f32,
+    improve_life_cost: u32,
+    improve_life: f64,
 }
 
 fn update_graph_data(
@@ -97,7 +103,7 @@ fn update_graph_data(
 fn overall_ui(
     egui_context: ResMut<EguiContext>,
     data: Res<GraphData>,
-    mut costs: ResMut<Costs>,
+    mut bonuses: ResMut<Bonuses>,
     mut events: EventWriter<HillEvents>,
     evolve_timer: Res<EvolveTimer>,
 ) {
@@ -159,34 +165,36 @@ fn overall_ui(
                     ui.label("Available");
                     ui.label(format!("{}", data.queen_food));
                     ui.end_row();
-                    if data.queen_food < costs.spawn {
-                        ui.add(Button::new("Spawn 12 ants").enabled(false));
-                    } else if ui.button("Spawn 12 ants").clicked() {
+                    if data.queen_food < bonuses.spawn_cost {
+                        ui.add(Button::new(format!("Spawn {} ants", bonuses.spawn)).enabled(false));
+                    } else if ui.button(format!("Spawn {} ants", bonuses.spawn)).clicked() {
                         debug!("spawn ants!");
-                        events.send(HillEvents::SpawnAnts { count: 12 });
-                        events.send(HillEvents::RemoveQueenFood(costs.spawn));
+                        events.send(HillEvents::SpawnAnts {
+                            count: bonuses.spawn,
+                        });
+                        events.send(HillEvents::RemoveQueenFood(bonuses.spawn_cost));
                     }
-                    ui.label(format!("{}", costs.spawn));
+                    ui.label(format!("{}", bonuses.spawn_cost));
                     ui.end_row();
-                    if data.queen_food < costs.improve_speed {
+                    if data.queen_food < bonuses.improve_speed_cost {
                         ui.add(Button::new("Improve speed").enabled(false));
                     } else if ui.button("Improve speed").clicked() {
                         debug!("Improve speed!");
-                        events.send(HillEvents::ImproveMaxSpeed(0.01));
-                        events.send(HillEvents::RemoveQueenFood(costs.improve_speed));
-                        costs.improve_speed += 5;
+                        events.send(HillEvents::ImproveMaxSpeed(bonuses.improve_speed));
+                        events.send(HillEvents::RemoveQueenFood(bonuses.improve_speed_cost));
+                        bonuses.improve_speed_cost += 5;
                     }
-                    ui.label(format!("{}", costs.improve_speed));
+                    ui.label(format!("{}", bonuses.improve_speed_cost));
                     ui.end_row();
-                    if data.queen_food < costs.improve_life {
+                    if data.queen_food < bonuses.improve_life_cost {
                         ui.add(Button::new("Improve life expectancy").enabled(false));
                     } else if ui.button("Improve life expectancy").clicked() {
                         debug!("Improve life expectancy!");
-                        events.send(HillEvents::ImproveLifeExpectancy(5.0));
-                        events.send(HillEvents::RemoveQueenFood(costs.improve_life));
-                        costs.improve_life += 5;
+                        events.send(HillEvents::ImproveLifeExpectancy(bonuses.improve_life));
+                        events.send(HillEvents::RemoveQueenFood(bonuses.improve_life_cost));
+                        bonuses.improve_life_cost += 5;
                     }
-                    ui.label(format!("{}", costs.improve_life));
+                    ui.label(format!("{}", bonuses.improve_life_cost));
                     ui.end_row();
                 });
         });
