@@ -68,7 +68,7 @@ impl Default for AntHill {
     fn default() -> Self {
         AntHill {
             food: 50,
-            queen_food: 2,
+            queen_food: 5,
             gene: CreatureGene {
                 life_expectancy: 30.0,
                 max_speed: 0.25,
