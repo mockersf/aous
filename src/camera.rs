@@ -1,6 +1,6 @@
-use std::collections::hash_map::Entry;
+use std::{collections::hash_map::Entry, f32::consts::FRAC_PI_2};
 
-use bevy::{prelude::*, utils::HashMap};
+use bevy::{pbr2::DirectionalLight, prelude::*, utils::HashMap};
 // use bevy_mod_raycast::RayCastSource;
 
 use crate::{game_state::GameState, terrain_spawner::EmptyLot, BORDER};
@@ -62,6 +62,18 @@ fn setup(mut commands: Commands) {
                 })
                 .insert(Rotates);
         });
+    commands.spawn_bundle(bevy::pbr2::DirectionalLightBundle {
+        directional_light: DirectionalLight {
+            illuminance: 1500.0,
+            ..Default::default()
+        },
+        transform: Transform {
+            translation: Vec3::new(0.0, 5.0, 0.0),
+            rotation: Quat::from_rotation_x(-FRAC_PI_2),
+            ..Default::default()
+        },
+        ..Default::default()
+    });
 }
 
 #[derive(Default)]
