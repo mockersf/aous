@@ -192,7 +192,7 @@ fn generate_lot(x: i32, z: i32, noise_seeds: &NoiseSeeds) -> Lot {
                     } else {
                         (
                             elevation,
-                            elevation / 45.0 + if elevation > 0.6 { 0.4 } else { 0.0 },
+                            elevation / 75.0 + if elevation > 0.95 { 0.4 } else { 0.0 },
                         )
                     }
                 }

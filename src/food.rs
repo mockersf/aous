@@ -102,7 +102,7 @@ impl FromWorld for FoodHandles {
 }
 
 pub enum WorldEvents {
-    SpawnFood,
+    SpawnFood(bool),
     SpawnAntEater(Vec3),
 }
 
@@ -132,9 +132,16 @@ fn spawn_food(
     for event in events.iter() {
         let mut rn = rand::thread_rng();
         match event {
-            WorldEvents::SpawnFood => {
+            WorldEvents::SpawnFood(is_nearby) => {
+                let range = if *is_nearby {
+                    0.25
+                } else if rn.gen_bool(0.05) {
+                    BORDER / 2.0
+                } else {
+                    BORDER * 10.0 / 11.0
+                };
                 let (x, z) = iter::repeat(())
-                    .map(|_| (rn.gen_range(-BORDER..BORDER), rn.gen_range(-BORDER..BORDER)))
+                    .map(|_| (rn.gen_range(-range..range), rn.gen_range(-range..range)))
                     .find(|(x, z)| !obstacle_map.is_obstacle(*x, *z, 0.0))
                     .unwrap();
                 let nb = rn.gen_range(80..100);
@@ -144,7 +151,7 @@ fn spawn_food(
                         GlobalTransform::default(),
                         FoodHeap { start_count: nb },
                         FoodGoneBadTimer(Timer::new(
-                            Duration::from_secs_f32(food_delay.gone_bad),
+                            Duration::from_secs_f32(food_delay.gone_bad + rn.gen_range(-5.0..5.0)),
                             false,
                         )),
                     ))
@@ -178,7 +185,7 @@ pub struct FoodTimer(pub Timer);
 fn pop_food(time: Res<Time>, mut timer: ResMut<FoodTimer>, mut events: EventWriter<WorldEvents>) {
     if timer.0.tick(time.delta()).just_finished() {
         for _ in 0..(BORDER as i32).pow(2) {
-            events.send(WorldEvents::SpawnFood);
+            events.send(WorldEvents::SpawnFood(false));
         }
     }
 }
@@ -261,7 +268,7 @@ fn enter_the_anteater(
 
 fn faster_decay(time: Res<Time>, mut timer: Local<Timer>, mut food_delay: ResMut<FoodDelay>) {
     if timer.tick(time.delta()).just_finished() {
-        food_delay.gone_bad = (food_delay.gone_bad - 5.0).max(20.0);
+        food_delay.gone_bad = (food_delay.gone_bad - 5.0).max(10.0);
         food_delay.summon_anteater = (food_delay.summon_anteater - 2.0).max(5.0);
     }
 }

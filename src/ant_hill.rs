@@ -6,6 +6,7 @@ use rand::Rng;
 use crate::{
     ants::{AntHandles, AntState, Creature, CreatureGene},
     game_state::GameState,
+    ui::GraphData,
 };
 
 pub struct AntHillPlugin;
@@ -62,6 +63,8 @@ pub struct AntHill {
     pub food: u32,
     pub queen_food: u32,
     pub gene: CreatureGene,
+    pub spawn_per_wave: f32,
+    pub mutation_improvement: f32,
     pub gatherer_genes: VecDeque<CreatureGene>,
 }
 
@@ -74,7 +77,10 @@ impl Default for AntHill {
                 life_expectancy: 30.0,
                 max_speed: 0.25,
                 wander_strength: 0.1,
+                antennas: 8.0,
             },
+            spawn_per_wave: 10.0,
+            mutation_improvement: 0.0,
             gatherer_genes: VecDeque::new(),
         }
     }
@@ -91,17 +97,21 @@ fn spawn_ant_hill(mut commands: Commands, ant_hill_handles: Res<AntHillHandles>)
 
 pub enum HillEvents {
     SpawnAnts { count: u32 },
-    StoreFood(u32, CreatureGene),
     RemoveQueenFood(u32),
     ImproveMaxSpeed(f32),
     ImproveLifeExpectancy(f64),
-    ReplenishFood(u32, f64),
+    ImproveAntennas(f32),
+    ImproveWave(f32),
+    ImproveMutation(f32),
+    ReplenishFood(u32, f64, Option<CreatureGene>),
 }
 
 fn use_food(mut hill: ResMut<AntHill>, mut events: EventWriter<HillEvents>) {
     if hill.food >= 10 {
         hill.food -= 10;
-        events.send(HillEvents::SpawnAnts { count: 10 });
+        events.send(HillEvents::SpawnAnts {
+            count: hill.spawn_per_wave as u32,
+        });
     }
 }
 
@@ -118,10 +128,12 @@ fn hill_events(
     mut hill: ResMut<AntHill>,
     mut events: EventReader<HillEvents>,
     time: Res<Time>,
+    mut data: ResMut<GraphData>,
 ) {
     for event in events.iter() {
         match event {
             HillEvents::SpawnAnts { count } => {
+                data.total_ants += count;
                 let mut rn = rand::thread_rng();
                 for _ in 0..*count {
                     commands
@@ -172,30 +184,36 @@ fn hill_events(
                                     + rn.gen_range(
                                         -mutations::WANDER_STRENGTH..mutations::WANDER_STRENGTH,
                                     ) / 2.0,
+                                antennas: hill.gene.antennas
+                                    + rn.gen_range(-mutations::ANTENNAS..mutations::ANTENNAS) / 2.0,
                             },
                         });
                 }
             }
-            HillEvents::StoreFood(count, gene) => {
-                if rand::thread_rng().gen_bool(0.1) {
-                    hill.queen_food += count;
-                } else {
-                    hill.food += count;
-                }
-                hill.gatherer_genes.push_back(*gene);
-                if hill.gatherer_genes.len() > 100 {
-                    hill.gatherer_genes.pop_front();
-                }
-            }
             HillEvents::RemoveQueenFood(consumed) => hill.queen_food -= consumed,
-            HillEvents::ImproveMaxSpeed(boost) => hill.gene.max_speed += boost,
-            HillEvents::ImproveLifeExpectancy(boost) => hill.gene.life_expectancy += boost,
-            HillEvents::ReplenishFood(count, ratio) => {
+            HillEvents::ImproveMaxSpeed(boost) => {
+                hill.gene.max_speed = (hill.gene.max_speed + boost).max(0.15)
+            }
+            HillEvents::ImproveLifeExpectancy(boost) => {
+                hill.gene.life_expectancy = (hill.gene.life_expectancy + boost).max(10.0)
+            }
+            HillEvents::ImproveAntennas(boost) => {
+                hill.gene.antennas = (hill.gene.antennas + boost).max(3.0)
+            }
+            HillEvents::ImproveWave(boost) => hill.spawn_per_wave += boost,
+            HillEvents::ImproveMutation(boost) => hill.mutation_improvement += boost,
+            HillEvents::ReplenishFood(count, ratio, gene) => {
                 for _ in 0..*count {
                     if rand::thread_rng().gen_bool(*ratio) {
                         hill.queen_food += 1;
                     } else {
                         hill.food += 1;
+                    }
+                }
+                if let Some(gene) = gene {
+                    hill.gatherer_genes.push_back(*gene);
+                    if hill.gatherer_genes.len() > 100 {
+                        hill.gatherer_genes.pop_front();
                     }
                 }
             }
@@ -207,6 +225,7 @@ mod mutations {
     pub const MAX_SPEED: f32 = 0.08;
     pub const WANDER_STRENGTH: f32 = 0.02;
     pub const LIFE_EXPECTANCY: f64 = 10.0;
+    pub const ANTENNAS: f32 = 3.0;
 }
 
 pub struct EvolveTimer(pub Timer);
@@ -227,11 +246,18 @@ fn evolve_hills(mut hill: ResMut<AntHill>, time: Res<Time>, mut timer: ResMut<Ev
                             wander_strength: (current.wander_strength * count as f32
                                 + gene.wander_strength)
                                 / (count + 1) as f32,
+                            antennas: (current.antennas * count as f32 + gene.antennas)
+                                / (count + 1) as f32,
                         },
                         count + 1,
                     )
                 });
-        hill.gene = mean_gene.0;
+        hill.gene = CreatureGene {
+            life_expectancy: mean_gene.0.life_expectancy + hill.mutation_improvement as f64,
+            max_speed: mean_gene.0.max_speed + hill.mutation_improvement / 100.0,
+            wander_strength: mean_gene.0.wander_strength,
+            antennas: mean_gene.0.antennas + hill.mutation_improvement / 10.0,
+        };
         info!("current gene: {:?}", hill.gene);
     }
 }

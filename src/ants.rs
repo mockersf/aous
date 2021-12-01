@@ -100,6 +100,7 @@ pub struct CreatureGene {
     pub life_expectancy: f64,
     pub max_speed: f32,
     pub wander_strength: f32,
+    pub antennas: f32,
 }
 
 #[derive(Component)]
@@ -128,7 +129,7 @@ fn update_ant_state(
                         target_heap = Some(children);
                     }
                 }
-                if near < (1.0 / DEF * 8.0).powf(2.0) {
+                if near < (1.0 / DEF * ant.gene.antennas).powf(2.0) {
                     for food_entity in Deref::deref(target_heap.unwrap()) {
                         if let Ok((food, mut pellet)) = foods.get_mut(*food_entity) {
                             if !pellet.targeted {
@@ -165,7 +166,7 @@ fn update_ant_state(
             AntState::HasFood => {
                 // drop food at home if close enough
                 if transform.translation.distance_squared(Vec3::ZERO) < (1.0 / DEF).powf(2.0) {
-                    hill_events.send(HillEvents::StoreFood(1, ant.gene));
+                    hill_events.send(HillEvents::ReplenishFood(1, 0.1, Some(ant.gene)));
                     ant.state = AntState::Wander;
                     for child in children.iter() {
                         if picked_foods.get(*child).is_ok() {

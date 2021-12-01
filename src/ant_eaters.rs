@@ -92,7 +92,7 @@ fn spawn_anteaters(
 ) {
     for event in events.iter() {
         match event {
-            WorldEvents::SpawnFood => (),
+            WorldEvents::SpawnFood(_) => (),
             WorldEvents::SpawnAntEater(position) => {
                 commands
                     .spawn_bundle((
@@ -188,10 +188,19 @@ fn anteaters_die(
     for (entity, transform, anteater) in anteaters.iter() {
         if transform.translation.distance_squared(Vec3::ZERO) < 0.005 {
             commands.entity(entity).despawn_recursive();
-            events.send(HillEvents::ReplenishFood(anteater.ant_killed / 10, 0.8));
-            events.send(HillEvents::ReplenishFood(anteater.food_picked / 20, 0.5));
-            events.send(HillEvents::ImproveLifeExpectancy(-0.5));
-            events.send(HillEvents::ImproveMaxSpeed(-0.001));
+            events.send(HillEvents::ReplenishFood(
+                anteater.ant_killed / 15,
+                1.0,
+                None,
+            ));
+            events.send(HillEvents::ReplenishFood(
+                anteater.food_picked / 25,
+                0.8,
+                None,
+            ));
+            events.send(HillEvents::ImproveLifeExpectancy(-0.8));
+            events.send(HillEvents::ImproveMaxSpeed(-0.002));
+            events.send(HillEvents::ImproveAntennas(-0.1));
         }
     }
 }
@@ -206,7 +215,7 @@ fn anteaters_consume_food(
             if transform
                 .translation
                 .distance_squared(food_transform.translation)
-                < 0.025
+                < 0.017
             {
                 commands
                     .entity(food_entity)
@@ -229,7 +238,7 @@ fn anteaters_consume_ants(
             if transform
                 .translation
                 .distance_squared(ant_transform.translation)
-                < 0.025
+                < 0.017
             {
                 if let AntState::PickFood(_, food_entity) = ant.state {
                     if let Ok(mut food_pellet) = foods.get_mut(food_entity) {
