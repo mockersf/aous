@@ -12,7 +12,7 @@ use bevy_egui::{
     egui::{
         self,
         plot::{Line, Plot, Value, Values},
-        Button, ProgressBar,
+        ProgressBar,
     },
     EguiContext,
 };
@@ -268,68 +268,91 @@ fn overall_ui(
                         ui.label("Available");
                         ui.label(format!("{}", data.queen_food));
                         ui.end_row();
-                        if data.queen_food < bonuses.spawn_cost {
-                            ui.add(
-                                Button::new(format!("Spawn {} Ants", bonuses.spawn)).enabled(false),
-                            );
-                        } else if ui.button(format!("Spawn {} Ants", bonuses.spawn)).clicked() {
-                            events.send(HillEvents::SpawnAnts {
-                                count: bonuses.spawn,
-                            });
-                            events.send(HillEvents::RemoveQueenFood(bonuses.spawn_cost));
-                            bonuses.spawn += 1;
-                            bonuses.spawn_cost += 1;
-                        }
+                        ui.scope(|ui| {
+                            if data.queen_food < bonuses.spawn_cost {
+                                ui.set_enabled(false);
+                            }
+                            if ui.button(format!("Spawn {} Ants", bonuses.spawn)).clicked() {
+                                events.send(HillEvents::SpawnAnts {
+                                    count: bonuses.spawn,
+                                });
+                                events.send(HillEvents::RemoveQueenFood(bonuses.spawn_cost));
+                                bonuses.spawn += 1;
+                                bonuses.spawn_cost += 1;
+                            }
+                        });
                         ui.label(format!("{}", bonuses.spawn_cost));
                         ui.end_row();
-                        if data.queen_food < bonuses.improve_wave_cost {
-                            ui.add(Button::new("Improve Ant Spawning").enabled(false));
-                        } else if ui.button("Improve Ant Spawning").clicked() {
-                            events.send(HillEvents::ImproveWave(bonuses.improve_wave));
-                            events.send(HillEvents::RemoveQueenFood(bonuses.improve_wave_cost));
-                            bonuses.spawn += 2;
-                            bonuses.improve_wave_cost += 15;
-                        }
+                        ui.scope(|ui| {
+                            if data.queen_food < bonuses.improve_wave_cost {
+                                ui.set_enabled(false);
+                            }
+                            if ui.button("Improve Ant Spawning").clicked() {
+                                events.send(HillEvents::ImproveWave(bonuses.improve_wave));
+                                events.send(HillEvents::RemoveQueenFood(bonuses.improve_wave_cost));
+                                bonuses.spawn += 2;
+                                bonuses.improve_wave_cost += 15;
+                            }
+                        });
                         ui.label(format!("{}", bonuses.improve_wave_cost));
                         ui.end_row();
-                        if data.queen_food < bonuses.improve_speed_cost {
-                            ui.add(Button::new("Improve Speed").enabled(false));
-                        } else if ui.button("Improve Speed").clicked() {
-                            events.send(HillEvents::ImproveMaxSpeed(bonuses.improve_speed));
-                            events.send(HillEvents::RemoveQueenFood(bonuses.improve_speed_cost));
-                            bonuses.improve_speed_cost += 5;
-                            bonuses.improve_speed += 0.002;
-                        }
+                        ui.scope(|ui| {
+                            if data.queen_food < bonuses.improve_speed_cost {
+                                ui.set_enabled(false);
+                            }
+                            if ui.button("Improve Speed").clicked() {
+                                events.send(HillEvents::ImproveMaxSpeed(bonuses.improve_speed));
+                                events
+                                    .send(HillEvents::RemoveQueenFood(bonuses.improve_speed_cost));
+                                bonuses.improve_speed_cost += 5;
+                                bonuses.improve_speed += 0.002;
+                            }
+                        });
+
                         ui.label(format!("{}", bonuses.improve_speed_cost));
                         ui.end_row();
-                        if data.queen_food < bonuses.improve_life_cost {
-                            ui.add(Button::new("Improve Life Expectancy").enabled(false));
-                        } else if ui.button("Improve Life Expectancy").clicked() {
-                            events.send(HillEvents::ImproveLifeExpectancy(bonuses.improve_life));
-                            events.send(HillEvents::RemoveQueenFood(bonuses.improve_life_cost));
-                            bonuses.improve_life_cost += 5;
-                            bonuses.improve_life += 2.0;
-                        }
+                        ui.scope(|ui| {
+                            if data.queen_food < bonuses.improve_life_cost {
+                                ui.set_enabled(false);
+                            }
+                            if ui.button("Improve Life Expectancy").clicked() {
+                                events
+                                    .send(HillEvents::ImproveLifeExpectancy(bonuses.improve_life));
+                                events.send(HillEvents::RemoveQueenFood(bonuses.improve_life_cost));
+                                bonuses.improve_life_cost += 5;
+                                bonuses.improve_life += 2.0;
+                            }
+                        });
                         ui.label(format!("{}", bonuses.improve_life_cost));
                         ui.end_row();
-                        if data.queen_food < bonuses.improve_antennas_cost {
-                            ui.add(Button::new("Improve Food Sensibility").enabled(false));
-                        } else if ui.button("Improve Food Sensibility").clicked() {
-                            events.send(HillEvents::ImproveAntennas(bonuses.improve_antennas));
-                            events.send(HillEvents::RemoveQueenFood(bonuses.improve_antennas_cost));
-                            bonuses.improve_antennas_cost += 5;
-                            bonuses.improve_antennas += 1.0;
-                        }
+                        ui.scope(|ui| {
+                            if data.queen_food < bonuses.improve_antennas_cost {
+                                ui.set_enabled(false);
+                            }
+                            if ui.button("Improve Food Sensibility").clicked() {
+                                events.send(HillEvents::ImproveAntennas(bonuses.improve_antennas));
+                                events.send(HillEvents::RemoveQueenFood(
+                                    bonuses.improve_antennas_cost,
+                                ));
+                                bonuses.improve_antennas_cost += 5;
+                                bonuses.improve_antennas += 1.0;
+                            }
+                        });
                         ui.label(format!("{}", bonuses.improve_antennas_cost));
                         ui.end_row();
-                        if data.queen_food < bonuses.improve_mutation_cost {
-                            ui.add(Button::new("Improve Mutations").enabled(false));
-                        } else if ui.button("Improve Mutations").clicked() {
-                            events.send(HillEvents::ImproveMutation(bonuses.improve_mutation));
-                            events.send(HillEvents::RemoveQueenFood(bonuses.improve_mutation_cost));
-                            bonuses.improve_mutation_cost += 15;
-                            bonuses.improve_mutation += 0.15;
-                        }
+                        ui.scope(|ui| {
+                            if data.queen_food < bonuses.improve_mutation_cost {
+                                ui.set_enabled(false);
+                            }
+                            if ui.button("Improve Mutations").clicked() {
+                                events.send(HillEvents::ImproveMutation(bonuses.improve_mutation));
+                                events.send(HillEvents::RemoveQueenFood(
+                                    bonuses.improve_mutation_cost,
+                                ));
+                                bonuses.improve_mutation_cost += 15;
+                                bonuses.improve_mutation += 0.15;
+                            }
+                        });
                         ui.label(format!("{}", bonuses.improve_mutation_cost));
                         ui.end_row();
                         if !data.can_summon_food {

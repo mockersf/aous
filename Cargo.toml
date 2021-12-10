@@ -17,7 +17,9 @@ bevy_render2 = { git = "https://github.com/bevyengine/bevy", branch = "main", de
 bracket-noise = "0.8"
 # bevy_mod_raycast = { git = "https://github.com/aevyrie/bevy_mod_raycast" }
 rand = "0.8"
-bevy_egui = { git = "https://github.com/jakobhellermann/bevy_egui", branch = "bevy-pipelined" }
+# bevy_egui = { git = "https://github.com/jakobhellermann/bevy_egui", branch = "bevy-pipelined" }
+bevy_egui = { git = "https://github.com/mockersf/bevy_egui", branch = "bevy-pipelined-updated", version = "0.8", default-features = false }
+
 config = { path = "crates/config" }
 asset_io = { path = "crates/asset_io" }
 
