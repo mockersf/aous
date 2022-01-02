@@ -18,12 +18,14 @@ impl Default for InMemoryAssetIo {
 }
 
 impl InMemoryAssetIo {
+    #[must_use]
     pub fn new() -> Self {
         InMemoryAssetIo {
             loaded: std::collections::HashMap::new(),
         }
     }
 
+    #[must_use]
     pub fn preloaded() -> Self {
         let mut new = InMemoryAssetIo {
             loaded: std::collections::HashMap::new(),
@@ -50,15 +52,25 @@ impl AssetIo for InMemoryAssetIo {
         })
     }
 
+    #[allow(clippy::needless_collect)]
     fn read_directory(
         &self,
-        _path: &Path,
+        path: &Path,
     ) -> Result<Box<dyn Iterator<Item = PathBuf>>, bevy::asset::AssetIoError> {
-        Ok(Box::new(std::iter::empty::<PathBuf>()))
+        let paths: Vec<_> = self
+            .loaded
+            .keys()
+            .filter(|loaded_path| loaded_path.starts_with(path))
+            .map(|t| t.to_path_buf())
+            .collect();
+        Ok(Box::new(paths.into_iter()))
     }
 
-    fn is_directory(&self, _path: &Path) -> bool {
-        false
+    fn is_directory(&self, path: &Path) -> bool {
+        let as_folder = path.join("");
+        self.loaded
+            .keys()
+            .any(|loaded_path| loaded_path.starts_with(&as_folder) && loaded_path != &path)
     }
 
     fn watch_path_for_changes(&self, _path: &Path) -> Result<(), bevy::asset::AssetIoError> {

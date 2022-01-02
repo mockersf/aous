@@ -12,4 +12,4 @@ publish = false
 bevy = { git = "https://github.com/bevyengine/bevy", branch = "main", default-features = false }
 
 [build-dependencies]
-ring = "0.16"
+cargo-emit = "0.2.1"
