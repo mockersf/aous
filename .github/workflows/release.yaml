@@ -116,17 +116,20 @@ jobs:
         if: matrix.target.channel == 'linux'
         uses: montudor/action-zip@v1
         with:
-          args: zip -r ${{ env.binary }}.${{ env.extension }} linux
+          files: linux
+          dest: ${{ env.binary }}.${{ env.extension }}
       - name: windows packaging
         if: matrix.target.channel == 'windows'
         uses: montudor/action-zip@v1
         with:
-          args: zip -r ${{ env.binary }}.${{ env.extension }} windows
+          files: windows
+          dest: ${{ env.binary }}.${{ env.extension }}
       - name: wasm packaging
         if: matrix.target.channel == 'wasm'
         uses: montudor/action-zip@v1
         with:
-          args: zip -r ${{ env.binary }}.${{ env.extension }} wasm
+          files: wasm
+          dest: ${{ env.binary }}.${{ env.extension }}
 
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v2
