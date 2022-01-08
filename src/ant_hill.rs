@@ -29,27 +29,27 @@ impl Plugin for AntHillPlugin {
 }
 
 struct AntHillHandles {
-    mesh: Handle<bevy::render2::mesh::Mesh>,
-    color: Handle<bevy::pbr2::StandardMaterial>,
+    mesh: Handle<bevy::render::mesh::Mesh>,
+    color: Handle<bevy::pbr::StandardMaterial>,
 }
 
 impl FromWorld for AntHillHandles {
     fn from_world(world: &mut bevy::prelude::World) -> Self {
         let mut meshes = world
-            .get_resource_mut::<Assets<bevy::render2::mesh::Mesh>>()
+            .get_resource_mut::<Assets<bevy::render::mesh::Mesh>>()
             .unwrap();
-        let mesh = meshes.add(bevy::render2::mesh::Mesh::from(
-            bevy::render2::mesh::shape::Icosphere {
+        let mesh = meshes.add(bevy::render::mesh::Mesh::from(
+            bevy::render::mesh::shape::Icosphere {
                 radius: 0.15,
                 ..Default::default()
             },
         ));
 
         let mut materials = world
-            .get_resource_mut::<Assets<bevy::pbr2::StandardMaterial>>()
+            .get_resource_mut::<Assets<bevy::pbr::StandardMaterial>>()
             .unwrap();
-        let color = materials.add(bevy::pbr2::StandardMaterial {
-            base_color: bevy::render2::color::Color::rgb(0.545, 0.271, 0.075),
+        let color = materials.add(bevy::pbr::StandardMaterial {
+            base_color: bevy::render::color::Color::rgb(0.545, 0.271, 0.075),
             perceptual_roughness: 1.0,
             metallic: 0.0,
             ..Default::default()
@@ -87,7 +87,7 @@ impl Default for AntHill {
 }
 
 fn spawn_ant_hill(mut commands: Commands, ant_hill_handles: Res<AntHillHandles>) {
-    commands.spawn_bundle(bevy::pbr2::PbrBundle {
+    commands.spawn_bundle(bevy::pbr::PbrBundle {
         mesh: ant_hill_handles.mesh.clone_weak(),
         material: ant_hill_handles.color.clone_weak(),
         transform: Transform::from_xyz(0.0, -0.02, 0.0),
@@ -140,7 +140,7 @@ fn hill_events(
                         .spawn_bundle((Transform::identity(), GlobalTransform::default()))
                         .with_children(|creature| {
                             creature
-                                .spawn_bundle(bevy::pbr2::PbrBundle {
+                                .spawn_bundle(bevy::pbr::PbrBundle {
                                     mesh: ant_handles.body_mesh.clone_weak(),
                                     material: ant_handles.body_color.clone_weak(),
                                     transform: Transform::from_rotation(Quat::from_rotation_x(
@@ -148,23 +148,23 @@ fn hill_events(
                                     )),
                                     ..Default::default()
                                 })
-                                .insert(bevy::pbr2::NotShadowCaster);
+                                .insert(bevy::pbr::NotShadowCaster);
                             creature
-                                .spawn_bundle(bevy::pbr2::PbrBundle {
+                                .spawn_bundle(bevy::pbr::PbrBundle {
                                     mesh: ant_handles.eye_mesh.clone_weak(),
                                     material: ant_handles.eye_color.clone_weak(),
                                     transform: Transform::from_xyz(0.0075, 0.0075, 0.01875),
                                     ..Default::default()
                                 })
-                                .insert(bevy::pbr2::NotShadowCaster);
+                                .insert(bevy::pbr::NotShadowCaster);
                             creature
-                                .spawn_bundle(bevy::pbr2::PbrBundle {
+                                .spawn_bundle(bevy::pbr::PbrBundle {
                                     mesh: ant_handles.eye_mesh.clone_weak(),
                                     material: ant_handles.eye_color.clone_weak(),
                                     transform: Transform::from_xyz(-0.0075, 0.0075, 0.01875),
                                     ..Default::default()
                                 })
-                                .insert(bevy::pbr2::NotShadowCaster);
+                                .insert(bevy::pbr::NotShadowCaster);
                         })
                         .insert(Creature {
                             velocity: Vec3::ZERO,

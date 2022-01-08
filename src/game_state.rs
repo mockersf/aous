@@ -3,7 +3,7 @@ use std::time::Duration;
 use bevy::{
     core::{Time, Timer},
     prelude::{Commands, Entity, EventWriter, Plugin, Query, Res, ResMut, State, SystemSet},
-    render2::camera::OrthographicCameraBundle,
+    render::camera::OrthographicCameraBundle,
 };
 use bevy_egui::{egui, EguiContext};
 

@@ -7,21 +7,20 @@ license = "MIT"
 [dependencies]
 bevy = { git = "https://github.com/bevyengine/bevy", branch = "main", default-features = false, features = [
   "bevy_core_pipeline",
-  "bevy_sprite2",
-  "bevy_render2",
-  "bevy_pbr2",
+  "bevy_pbr",
+  "bevy_render",
+  "bevy_sprite",
   "bevy_winit",
   "x11",
+  "png"
 ] }
-bevy_render2 = { git = "https://github.com/bevyengine/bevy", branch = "main", default-features = false, features = [ "png" ] }
 bracket-noise = "0.8"
-# bevy_mod_raycast = { git = "https://github.com/aevyrie/bevy_mod_raycast" }
 rand = "0.8"
 # bevy_egui = { git = "https://github.com/jakobhellermann/bevy_egui", branch = "bevy-pipelined" }
 bevy_egui = { git = "https://github.com/mockersf/bevy_egui", branch = "bevy-pipelined-updated", version = "0.8", default-features = false }
+bevy_embedded_assets = { git = "https://github.com/vleue/embedded_assets", version = "0.2.0-dev" }
 
 config = { path = "crates/config" }
-asset_io = { path = "crates/asset_io" }
 
 
 [features]

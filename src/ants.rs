@@ -26,19 +26,19 @@ impl Plugin for AntsPlugin {
 }
 
 pub struct AntHandles {
-    pub body_mesh: Handle<bevy::render2::mesh::Mesh>,
-    pub body_color: Handle<bevy::pbr2::StandardMaterial>,
-    pub eye_mesh: Handle<bevy::render2::mesh::Mesh>,
-    pub eye_color: Handle<bevy::pbr2::StandardMaterial>,
+    pub body_mesh: Handle<bevy::render::mesh::Mesh>,
+    pub body_color: Handle<bevy::pbr::StandardMaterial>,
+    pub eye_mesh: Handle<bevy::render::mesh::Mesh>,
+    pub eye_color: Handle<bevy::pbr::StandardMaterial>,
 }
 
 impl FromWorld for AntHandles {
     fn from_world(world: &mut bevy::prelude::World) -> Self {
         let mut meshes = world
-            .get_resource_mut::<Assets<bevy::render2::mesh::Mesh>>()
+            .get_resource_mut::<Assets<bevy::render::mesh::Mesh>>()
             .unwrap();
-        let body_mesh = meshes.add(bevy::render2::mesh::Mesh::from(
-            bevy::render2::mesh::shape::Capsule {
+        let body_mesh = meshes.add(bevy::render::mesh::Mesh::from(
+            bevy::render::mesh::shape::Capsule {
                 radius: 0.015,
                 depth: 0.015,
                 latitudes: 4,
@@ -46,23 +46,23 @@ impl FromWorld for AntHandles {
                 ..Default::default()
             },
         ));
-        let eye_mesh = meshes.add(bevy::render2::mesh::Mesh::from(
-            bevy::render2::mesh::shape::Icosphere {
+        let eye_mesh = meshes.add(bevy::render::mesh::Mesh::from(
+            bevy::render::mesh::shape::Icosphere {
                 radius: 0.008,
                 subdivisions: 1,
             },
         ));
 
         let mut materials = world
-            .get_resource_mut::<Assets<bevy::pbr2::StandardMaterial>>()
+            .get_resource_mut::<Assets<bevy::pbr::StandardMaterial>>()
             .unwrap();
-        let body_color = materials.add(bevy::pbr2::StandardMaterial {
-            base_color: bevy::render2::color::Color::rgb(0.3, 0.3, 0.3),
+        let body_color = materials.add(bevy::pbr::StandardMaterial {
+            base_color: bevy::render::color::Color::rgb(0.3, 0.3, 0.3),
             perceptual_roughness: 1.0,
             metallic: 0.0,
             ..Default::default()
         });
-        let eye_color = materials.add(bevy::render2::color::Color::YELLOW.into());
+        let eye_color = materials.add(bevy::render::color::Color::YELLOW.into());
 
         Self {
             body_mesh,

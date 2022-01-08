@@ -29,19 +29,19 @@ impl Plugin for AntEatersPlugin {
 }
 
 pub struct AntEaterHandles {
-    pub body_mesh: Handle<bevy::render2::mesh::Mesh>,
-    pub body_color: Handle<bevy::pbr2::StandardMaterial>,
-    pub eye_mesh: Handle<bevy::render2::mesh::Mesh>,
-    pub eye_color: Handle<bevy::pbr2::StandardMaterial>,
+    pub body_mesh: Handle<bevy::render::mesh::Mesh>,
+    pub body_color: Handle<bevy::pbr::StandardMaterial>,
+    pub eye_mesh: Handle<bevy::render::mesh::Mesh>,
+    pub eye_color: Handle<bevy::pbr::StandardMaterial>,
 }
 
 impl FromWorld for AntEaterHandles {
     fn from_world(world: &mut bevy::prelude::World) -> Self {
         let mut meshes = world
-            .get_resource_mut::<Assets<bevy::render2::mesh::Mesh>>()
+            .get_resource_mut::<Assets<bevy::render::mesh::Mesh>>()
             .unwrap();
-        let body_mesh = meshes.add(bevy::render2::mesh::Mesh::from(
-            bevy::render2::mesh::shape::Capsule {
+        let body_mesh = meshes.add(bevy::render::mesh::Mesh::from(
+            bevy::render::mesh::shape::Capsule {
                 radius: 0.015,
                 depth: 0.015,
                 latitudes: 8,
@@ -49,23 +49,23 @@ impl FromWorld for AntEaterHandles {
                 ..Default::default()
             },
         ));
-        let eye_mesh = meshes.add(bevy::render2::mesh::Mesh::from(
-            bevy::render2::mesh::shape::Icosphere {
+        let eye_mesh = meshes.add(bevy::render::mesh::Mesh::from(
+            bevy::render::mesh::shape::Icosphere {
                 radius: 0.008,
                 subdivisions: 2,
             },
         ));
 
         let mut materials = world
-            .get_resource_mut::<Assets<bevy::pbr2::StandardMaterial>>()
+            .get_resource_mut::<Assets<bevy::pbr::StandardMaterial>>()
             .unwrap();
-        let body_color = materials.add(bevy::pbr2::StandardMaterial {
-            base_color: bevy::render2::color::Color::rgb(0.9, 0.1, 0.1),
+        let body_color = materials.add(bevy::pbr::StandardMaterial {
+            base_color: bevy::render::color::Color::rgb(0.9, 0.1, 0.1),
             perceptual_roughness: 1.0,
             metallic: 0.0,
             ..Default::default()
         });
-        let eye_color = materials.add(bevy::render2::color::Color::BLACK.into());
+        let eye_color = materials.add(bevy::render::color::Color::BLACK.into());
 
         Self {
             body_mesh,
@@ -104,19 +104,19 @@ fn spawn_anteaters(
                         GlobalTransform::default(),
                     ))
                     .with_children(|creature| {
-                        creature.spawn_bundle(bevy::pbr2::PbrBundle {
+                        creature.spawn_bundle(bevy::pbr::PbrBundle {
                             mesh: handles.body_mesh.clone_weak(),
                             material: handles.body_color.clone_weak(),
                             transform: Transform::from_rotation(Quat::from_rotation_x(FRAC_PI_2)),
                             ..Default::default()
                         });
-                        creature.spawn_bundle(bevy::pbr2::PbrBundle {
+                        creature.spawn_bundle(bevy::pbr::PbrBundle {
                             mesh: handles.eye_mesh.clone_weak(),
                             material: handles.eye_color.clone_weak(),
                             transform: Transform::from_xyz(0.0075, 0.0075, 0.01875),
                             ..Default::default()
                         });
-                        creature.spawn_bundle(bevy::pbr2::PbrBundle {
+                        creature.spawn_bundle(bevy::pbr::PbrBundle {
                             mesh: handles.eye_mesh.clone_weak(),
                             material: handles.eye_color.clone_weak(),
                             transform: Transform::from_xyz(-0.0075, 0.0075, 0.01875),

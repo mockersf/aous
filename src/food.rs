@@ -1,6 +1,6 @@
 use std::{f32::consts::PI, iter, time::Duration};
 
-use bevy::{pbr2::NotShadowCaster, prelude::*};
+use bevy::{pbr::NotShadowCaster, prelude::*};
 use rand::Rng;
 
 use crate::{game_state::GameState, terrain_spawner::ObstacleMap, BORDER, DEF};
@@ -26,11 +26,11 @@ impl Plugin for FoodPlugin {
 }
 
 pub struct FoodHandles {
-    pub mesh: Handle<bevy::render2::mesh::Mesh>,
-    pub color: Handle<bevy::pbr2::StandardMaterial>,
-    pub warning: Handle<bevy::render2::texture::Image>,
-    pub warning_material: Handle<bevy::pbr2::StandardMaterial>,
-    pub warning_mesh: Handle<bevy::render2::mesh::Mesh>,
+    pub mesh: Handle<bevy::render::mesh::Mesh>,
+    pub color: Handle<bevy::pbr::StandardMaterial>,
+    pub warning: Handle<bevy::render::texture::Image>,
+    pub warning_material: Handle<bevy::pbr::StandardMaterial>,
+    pub warning_mesh: Handle<bevy::render::mesh::Mesh>,
 }
 
 pub struct FoodDelay {
@@ -49,20 +49,20 @@ impl Default for FoodDelay {
 impl FromWorld for FoodHandles {
     fn from_world(world: &mut bevy::prelude::World) -> Self {
         let mut meshes = world
-            .get_resource_mut::<Assets<bevy::render2::mesh::Mesh>>()
+            .get_resource_mut::<Assets<bevy::render::mesh::Mesh>>()
             .unwrap();
-        let mesh = meshes.add(bevy::render2::mesh::Mesh::from(
-            bevy::render2::mesh::shape::Icosphere {
+        let mesh = meshes.add(bevy::render::mesh::Mesh::from(
+            bevy::render::mesh::shape::Icosphere {
                 radius: 0.015,
                 subdivisions: 1,
             },
         ));
 
         let mut materials = world
-            .get_resource_mut::<Assets<bevy::pbr2::StandardMaterial>>()
+            .get_resource_mut::<Assets<bevy::pbr::StandardMaterial>>()
             .unwrap();
-        let color = materials.add(bevy::pbr2::StandardMaterial {
-            base_color: bevy::render2::color::Color::BLUE,
+        let color = materials.add(bevy::pbr::StandardMaterial {
+            base_color: bevy::render::color::Color::BLUE,
             perceptual_roughness: 1.0,
             metallic: 0.0,
             ..Default::default()
@@ -74,21 +74,21 @@ impl FromWorld for FoodHandles {
             .load("hazard-sign.png");
 
         let warning_material = world
-            .get_resource_mut::<Assets<bevy::pbr2::StandardMaterial>>()
+            .get_resource_mut::<Assets<bevy::pbr::StandardMaterial>>()
             .unwrap()
-            .add(bevy::pbr2::StandardMaterial {
-                base_color: bevy::render2::color::Color::rgba(1.0, 0.0, 0.0, 0.3),
+            .add(bevy::pbr::StandardMaterial {
+                base_color: bevy::render::color::Color::rgba(1.0, 0.0, 0.0, 0.3),
                 base_color_texture: Some(warning.clone()),
                 unlit: true,
-                alpha_mode: bevy::pbr2::AlphaMode::Blend,
+                alpha_mode: bevy::pbr::AlphaMode::Blend,
                 ..Default::default()
             });
 
         let warning_mesh = world
-            .get_resource_mut::<Assets<bevy::render2::mesh::Mesh>>()
+            .get_resource_mut::<Assets<bevy::render::mesh::Mesh>>()
             .unwrap()
-            .add(bevy::render2::mesh::Mesh::from(
-                bevy::render2::mesh::shape::Quad::new(Vec2::new(0.2, 0.2)),
+            .add(bevy::render::mesh::Mesh::from(
+                bevy::render::mesh::shape::Quad::new(Vec2::new(0.2, 0.2)),
             ));
 
         Self {
@@ -165,7 +165,7 @@ fn spawn_food(
                             .take(nb)
                             .for_each(|pos| {
                                 let transform = Transform::from_translation(pos);
-                                heap.spawn_bundle(bevy::pbr2::PbrBundle {
+                                heap.spawn_bundle(bevy::pbr::PbrBundle {
                                     mesh: food_handles.mesh.clone_weak(),
                                     material: food_handles.color.clone_weak(),
                                     transform,
@@ -231,7 +231,7 @@ fn food_gone_bad(
                     ))
                     .with_children(|rotated| {
                         rotated
-                            .spawn_bundle(bevy::pbr2::PbrBundle {
+                            .spawn_bundle(bevy::pbr::PbrBundle {
                                 mesh: food_handles.warning_mesh.clone(),
                                 material: food_handles.warning_material.clone(),
                                 transform: Transform {

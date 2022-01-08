@@ -1,7 +1,7 @@
 use std::collections::hash_map::Entry;
 
 use bevy::{
-    ecs::component::SparseStorage, math::const_vec3, pbr2::NotShadowCaster, prelude::*,
+    ecs::component::SparseStorage, math::const_vec3, pbr::NotShadowCaster, prelude::*,
     utils::HashMap,
 };
 // use bevy_mod_raycast::{BoundVol, RayCastMesh};
@@ -71,24 +71,24 @@ impl Plugin for TerrainSpawnerPlugin {
 }
 
 struct Lot {
-    mesh: bevy::render2::mesh::Mesh,
-    color: bevy::render2::texture::Image,
-    metallic_roughness: bevy::render2::texture::Image,
+    mesh: bevy::render::mesh::Mesh,
+    color: bevy::render::texture::Image,
+    metallic_roughness: bevy::render::texture::Image,
     obstacle_map: HashMap<IVec2, bool>,
 }
 
 struct HandledLot {
-    mesh: Handle<bevy::render2::mesh::Mesh>,
-    color: Handle<bevy::pbr2::StandardMaterial>,
+    mesh: Handle<bevy::render::mesh::Mesh>,
+    color: Handle<bevy::pbr::StandardMaterial>,
 }
 
 fn fill_empty_lots(
     mut commands: Commands,
     lots: Query<(Entity, &EmptyLot)>,
     (mut meshes, mut textures, mut materials): (
-        ResMut<Assets<bevy::render2::mesh::Mesh>>,
-        ResMut<Assets<bevy::render2::texture::Image>>,
-        ResMut<Assets<bevy::pbr2::StandardMaterial>>,
+        ResMut<Assets<bevy::render::mesh::Mesh>>,
+        ResMut<Assets<bevy::render::texture::Image>>,
+        ResMut<Assets<bevy::pbr::StandardMaterial>>,
     ),
     mut mesh_cache: Local<HashMap<IVec2, HandledLot>>,
     mut obstacle_map: ResMut<ObstacleMap>,
@@ -102,8 +102,8 @@ fn fill_empty_lots(
                 obstacle_map.obstacle_map.extend(lot.obstacle_map);
                 HandledLot {
                     mesh: meshes.add(lot.mesh),
-                    color: materials.add(bevy::pbr2::StandardMaterial {
-                        base_color: bevy::render2::color::Color::WHITE,
+                    color: materials.add(bevy::pbr::StandardMaterial {
+                        base_color: bevy::render::color::Color::WHITE,
                         base_color_texture: Some(textures.add(lot.color)),
                         perceptual_roughness: 1.0,
                         metallic: 1.0,
@@ -116,7 +116,7 @@ fn fill_empty_lots(
             commands
                 .entity(entity)
                 .with_children(|lot| {
-                    lot.spawn_bundle(bevy::pbr2::PbrBundle {
+                    lot.spawn_bundle(bevy::pbr::PbrBundle {
                         mesh: mesh.mesh.clone_weak(),
                         material: mesh.color.clone_weak(),
                         ..Default::default()
@@ -152,8 +152,8 @@ fn generate_lot(x: i32, z: i32, noise_seeds: &NoiseSeeds) -> Lot {
     moisture_noise.set_fractal_lacunarity(2.0);
     moisture_noise.set_frequency(2.0);
 
-    const fn color_to_vec3(color: bevy::render2::color::Color) -> Vec3 {
-        if let bevy::render2::color::Color::Rgba {
+    const fn color_to_vec3(color: bevy::render::color::Color) -> Vec3 {
+        if let bevy::render::color::Color::Rgba {
             red,
             green,
             blue,
@@ -165,10 +165,10 @@ fn generate_lot(x: i32, z: i32, noise_seeds: &NoiseSeeds) -> Lot {
             const_vec3!([0.0, 0.0, 0.0])
         }
     }
-    let moisture_mountain = color_to_vec3(bevy::render2::color::Color::ALICE_BLUE);
-    let moisture_prairie = color_to_vec3(bevy::render2::color::Color::GREEN);
-    let arid_mountain = color_to_vec3(bevy::render2::color::Color::ANTIQUE_WHITE);
-    let arid_prairie = color_to_vec3(bevy::render2::color::Color::GRAY);
+    let moisture_mountain = color_to_vec3(bevy::render::color::Color::ALICE_BLUE);
+    let moisture_prairie = color_to_vec3(bevy::render::color::Color::GREEN);
+    let arid_mountain = color_to_vec3(bevy::render::color::Color::ANTIQUE_WHITE);
+    let arid_prairie = color_to_vec3(bevy::render::color::Color::GRAY);
 
     let mut vertices = Vec::new();
     let mut colors = Vec::new();
@@ -277,32 +277,32 @@ fn generate_lot(x: i32, z: i32, noise_seeds: &NoiseSeeds) -> Lot {
 
     Lot {
         mesh: vertices_as_mesh(vertices, DEF as u32),
-        color: bevy::render2::texture::Image::new(
-            bevy::render2::render_resource::Extent3d {
+        color: bevy::render::texture::Image::new(
+            bevy::render::render_resource::Extent3d {
                 width: DEF as u32 + 1,
                 height: DEF as u32 + 1,
                 depth_or_array_layers: 1,
             },
-            bevy::render2::render_resource::TextureDimension::D2,
+            bevy::render::render_resource::TextureDimension::D2,
             colors,
-            bevy::render2::render_resource::TextureFormat::Rgba8UnormSrgb,
+            bevy::render::render_resource::TextureFormat::Rgba8UnormSrgb,
         ),
-        metallic_roughness: bevy::render2::texture::Image::new(
-            bevy::render2::render_resource::Extent3d {
+        metallic_roughness: bevy::render::texture::Image::new(
+            bevy::render::render_resource::Extent3d {
                 width: DEF as u32 + 1,
                 height: DEF as u32 + 1,
                 depth_or_array_layers: 1,
             },
-            bevy::render2::render_resource::TextureDimension::D2,
+            bevy::render::render_resource::TextureDimension::D2,
             metallic_roughness,
-            bevy::render2::render_resource::TextureFormat::Rgba8UnormSrgb,
+            bevy::render::render_resource::TextureFormat::Rgba8UnormSrgb,
         ),
         obstacle_map,
     }
 }
 type Node = ([f32; 3], [f32; 3], [f32; 2]);
 
-fn vertices_as_mesh(vertices: Vec<Node>, details: u32) -> bevy::render2::mesh::Mesh {
+fn vertices_as_mesh(vertices: Vec<Node>, details: u32) -> bevy::render::mesh::Mesh {
     let mut positions = Vec::new();
     let mut normals = Vec::new();
     let mut uvs = Vec::new();
@@ -341,13 +341,13 @@ fn vertices_as_mesh(vertices: Vec<Node>, details: u32) -> bevy::render2::mesh::M
         }
     }
 
-    let mut mesh = bevy::render2::mesh::Mesh::new(
-        bevy::render2::render_resource::PrimitiveTopology::TriangleList,
+    let mut mesh = bevy::render::mesh::Mesh::new(
+        bevy::render::render_resource::PrimitiveTopology::TriangleList,
     );
-    mesh.set_attribute(bevy::render2::mesh::Mesh::ATTRIBUTE_POSITION, positions);
-    mesh.set_attribute(bevy::render2::mesh::Mesh::ATTRIBUTE_NORMAL, normals);
-    mesh.set_attribute(bevy::render2::mesh::Mesh::ATTRIBUTE_UV_0, uvs);
-    mesh.set_indices(Some(bevy::render2::mesh::Indices::U32(indices)));
+    mesh.set_attribute(bevy::render::mesh::Mesh::ATTRIBUTE_POSITION, positions);
+    mesh.set_attribute(bevy::render::mesh::Mesh::ATTRIBUTE_NORMAL, normals);
+    mesh.set_attribute(bevy::render::mesh::Mesh::ATTRIBUTE_UV_0, uvs);
+    mesh.set_indices(Some(bevy::render::mesh::Indices::U32(indices)));
     mesh
 }
 

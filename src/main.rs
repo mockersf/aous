@@ -9,7 +9,6 @@ use bevy::{
         LogDiagnosticsPlugin,
     },
     prelude::*,
-    PipelinedDefaultPlugins,
 };
 use bevy_egui::EguiPlugin;
 // use bevy_mod_raycast::{DefaultRaycastingPlugin, RayCastMethod, RayCastSource, RaycastSystem};
@@ -33,16 +32,16 @@ fn main() {
     App::new()
         .insert_resource(WindowDescriptor {
             title: "Ants Of Unusual Shape".to_string(),
-            #[cfg(target_arch = "wasm32")]
-            width: 1024.0,
             ..Default::default()
         })
         .insert_resource(bevy::log::LogSettings {
             level: bevy::log::Level::TRACE,
             filter: "wgpu=warn,bevy=info,winit=info,naga=info".to_string(),
         })
-        .add_plugins_with(PipelinedDefaultPlugins, |group| {
-            group.add_before::<bevy::asset::AssetPlugin, _>(asset_io::InMemoryAssetPlugin)
+        .add_plugins_with(DefaultPlugins, |group| {
+            group.add_before::<bevy::asset::AssetPlugin, _>(
+                bevy_embedded_assets::EmbeddedAssetPlugin,
+            )
         })
         // .add_plugin(DefaultRaycastingPlugin::<RaycastCameraToGround>::default())
         .add_plugin(FrameTimeDiagnosticsPlugin::default())

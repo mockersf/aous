@@ -1,6 +1,6 @@
 use std::{collections::hash_map::Entry, f32::consts::FRAC_PI_2};
 
-use bevy::{pbr2::DirectionalLight, prelude::*, utils::HashMap};
+use bevy::{pbr::DirectionalLight, prelude::*, utils::HashMap};
 // use bevy_mod_raycast::RayCastSource;
 
 use crate::{game_state::GameState, terrain_spawner::EmptyLot, BORDER};
@@ -11,8 +11,8 @@ impl Plugin for CameraPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_system_set(SystemSet::on_enter(GameState::Playing).with_system(setup));
 
-        #[cfg(not(target_arch = "wasm32"))]
-        app.insert_resource(bevy::pbr2::PointLightShadowMap {
+        // #[cfg(not(target_arch = "wasm32"))]
+        app.insert_resource(bevy::pbr::PointLightShadowMap {
             size: 2_usize.pow(12),
         });
         app.add_system_set(
@@ -35,16 +35,16 @@ fn setup(mut commands: Commands) {
             CameraParent,
         ))
         .with_children(|camera_placer| {
-            camera_placer.spawn_bundle(bevy::render2::camera::PerspectiveCameraBundle {
+            camera_placer.spawn_bundle(bevy::render::camera::PerspectiveCameraBundle {
                 transform: Transform::from_xyz(0.45, 4.3, -1.5)
                     .looking_at(Vec3::new(0.45, 0.0, -0.2), Vec3::Y),
                 ..Default::default()
             });
             // .insert(RayCastSource::<crate::RaycastCameraToGround>::new_transform_empty());
             camera_placer
-                .spawn_bundle(bevy::pbr2::PointLightBundle {
+                .spawn_bundle(bevy::pbr::PointLightBundle {
                     transform: Transform::from_xyz(-10.0, 3.0, 0.0),
-                    point_light: bevy::pbr2::PointLight {
+                    point_light: bevy::pbr::PointLight {
                         intensity: 1600.0,
                         range: 100.0,
                         shadows_enabled: true,
@@ -54,7 +54,7 @@ fn setup(mut commands: Commands) {
                 })
                 .insert(Rotates);
         });
-    commands.spawn_bundle(bevy::pbr2::DirectionalLightBundle {
+    commands.spawn_bundle(bevy::pbr::DirectionalLightBundle {
         directional_light: DirectionalLight {
             illuminance: 1500.0,
             ..Default::default()
@@ -74,7 +74,7 @@ pub struct VisibleLots(HashMap<IVec2, Entity>);
 fn refresh_visible_lots(
     mut commands: Commands,
     windows: Res<Windows>,
-    camera: Query<(&bevy::render2::camera::Camera, &GlobalTransform)>,
+    camera: Query<(&bevy::render::camera::Camera, &GlobalTransform)>,
     mut visible_lots: ResMut<VisibleLots>,
 ) {
     let window_width = windows.get_primary().unwrap().width();

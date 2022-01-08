@@ -5,8 +5,8 @@ use bevy::{
         info, App, AssetServer, Commands, Component, DespawnRecursiveExt, Entity, Query, Res,
         ResMut, State, SystemSet, Transform, With,
     },
-    render2::camera::OrthographicCameraBundle,
-    sprite2::PipelinedSpriteBundle,
+    render::camera::OrthographicCameraBundle,
+    sprite::SpriteBundle,
 };
 use rand::Rng;
 
@@ -47,7 +47,7 @@ fn setup(mut commands: Commands, mut screen: ResMut<Screen>, asset_server: Res<A
         .spawn_bundle(OrthographicCameraBundle::new_2d())
         .insert(ScreenTag);
     commands
-        .spawn_bundle(PipelinedSpriteBundle {
+        .spawn_bundle(SpriteBundle {
             texture: asset_server.load("logo.png"),
             ..Default::default()
         })
