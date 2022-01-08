@@ -122,6 +122,7 @@ impl Default for Bonuses {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn update_graph_data(
     creatures: Query<&Creature>,
     todo: Query<(), Or<(With<FoodPellet>, With<AntEater>)>>,

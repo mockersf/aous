@@ -17,13 +17,9 @@ const CURRENT_STATE: GameState = GameState::Splash;
 #[derive(Component)]
 struct ScreenTag;
 
+#[derive(Default)]
 struct Screen {
     done: Option<Timer>,
-}
-impl Default for Screen {
-    fn default() -> Self {
-        Screen { done: None }
-    }
 }
 
 pub struct SplashPlugin;
