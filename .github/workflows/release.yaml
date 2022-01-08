@@ -151,7 +151,7 @@ jobs:
       matrix:
         target:
           - channel: linux
-          # - channel: wasm
+          - channel: wasm
           - channel: macos
           - channel: windows
     steps:
