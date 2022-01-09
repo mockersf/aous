@@ -5,7 +5,7 @@ edition = "2021"
 license = "MIT"
 
 [dependencies]
-bevy = { git = "https://github.com/bevyengine/bevy", branch = "main", default-features = false, features = [
+bevy = { version = "0.6", default-features = false, features = [
   "bevy_core_pipeline",
   "bevy_pbr",
   "bevy_render",
@@ -16,12 +16,12 @@ bevy = { git = "https://github.com/bevyengine/bevy", branch = "main", default-fe
 ] }
 bracket-noise = "0.8"
 rand = "0.8"
-# bevy_egui = { git = "https://github.com/jakobhellermann/bevy_egui", branch = "bevy-pipelined" }
-bevy_egui = { git = "https://github.com/mockersf/bevy_egui", branch = "bevy-pipelined-updated", version = "0.8", default-features = false }
-bevy_embedded_assets = { git = "https://github.com/vleue/embedded_assets", version = "0.2.0-dev" }
+bevy_egui = { version = "0.10", default-features = false }
+bevy_embedded_assets = "0.2.0"
 
 config = { path = "crates/config" }
 
+[patch]
 
 [features]
 default = []

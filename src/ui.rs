@@ -217,19 +217,19 @@ fn overall_ui(
                         ui.label(format!("{}", data.nb_ants.back().unwrap_or(&0)));
                         ui.end_row();
                     });
-                ui.add(
-                    Plot::new("ant count")
-                        .height(150.0)
-                        .allow_zoom(false)
-                        .allow_drag(false)
-                        .show_axes([false, true])
-                        .line(Line::new(Values::from_values_iter(
+                Plot::new("ant count")
+                    .height(150.0)
+                    .allow_zoom(false)
+                    .allow_drag(false)
+                    .show_axes([false, true])
+                    .show(ui, |ui| {
+                        ui.line(Line::new(Values::from_values_iter(
                             data.nb_ants
                                 .iter()
                                 .enumerate()
                                 .map(|(i, c)| Value::new(i as f64, (*c) as f32)),
-                        ))),
-                );
+                        )))
+                    });
                 ui.add(
                     ProgressBar::new(data.food as f32 / 10.0)
                         .text(format!("Spawn {} new ants", data.wave as u32)),
